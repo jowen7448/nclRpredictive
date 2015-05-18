@@ -1,0 +1,217 @@
+%\VignetteIndexEntry{solutions1}
+%!Snw weave = knitr
+%\VignetteEngine{knitr::knitr}
+
+
+\documentclass[a4paper,justified,openany]{tufte-handout}
+<<setup, echo=FALSE, cache=FALSE>>=
+
+library(knitr)
+opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+              cache = TRUE, size = "small", message = FALSE,
+              fig.path='knitr_figure/graphics-', 
+               cache.path='knitr_cache/graphics-', 
+               fig.align='center', 
+               dev='pdf', fig.width=5, fig.height=5)
+
+knit_hooks$set(par=function(before, options, envir){
+    if (before && options$fig.show!='none') {
+        par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+            mgp=c(2,.7,0),tcl=-.01, las=1)
+}}, crop=hook_pdfcrop)
+# knit_theme$set(knit_theme$get("greyscale0"))
+
+opts_knit$set(out.format = "latex")
+
+# options(replace.assign=FALSE,width=50)
+# opts_chunk$set(fig.path='knitr_figure/graphics-',
+# cache.path='knitr_cache/graphics-',
+# fig.align='center',
+# dev='pdf', fig.width=5, fig.height=5,
+# fig.show='hold', cache=FALSE, par=TRUE)
+# knit_hooks$set(crop=hook_pdfcrop)
+# knit_hooks$set(par=function(before, options, envir){
+# if (before && options$fig.show!='none') {
+# par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+# mgp=c(2,.7,0),tcl=-.01, las=1)
+# }}, crop=hook_pdfcrop)
+
+if(!file.exists("graphics")) dir.create("graphics")
+@
+\usepackage{amsmath}
+% Set up the images/graphics package
+\usepackage{graphicx}
+\setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
+%\graphicspath{{vignettes/graphics/}}
+\title{Predictive Analytics: solutions 1}
+\date{} % if the \date{} command is left out, the current date will be used
+% The following package makes prettier tables. We're all about the bling!
+\usepackage{booktabs}
+% The units package provides nice, non-stacked fractions and better spacing
+% for units.
+\usepackage{units}
+% The fancyvrb package lets us customize the formatting of verbatim
+% environments. We use a slightly smaller font.
+\usepackage{fancyvrb}
+\fvset{fontsize=\normalsize}
+\newcommand{\cc}{\texttt}
+\graphicspath{{../graphics/}}
+\setcounter{secnumdepth}{2}
+\usepackage{microtype}
+\begin{document}
+\maketitle% this prints the handout title, author, and date
+
+Before proceeding with questions, load in the data and necessary packages
+<<>>=
+data(FuelEconomy, package = "AppliedPredictiveModeling")
+library(caret)
+library(nclRpredictive)
+@
+
+
+\begin{itemize}
+  \item Prior to any analysis we should get an idea of the relationships between variables in the data.
+<<eval = FALSE>>=
+#set up the graphics device
+op = par(mfrow = c(4,4), mar = c(4,2.5,0.5,0.5))
+plot(FE~., data = cars2010)
+par(op)
+
+@
+\item Create a simple linear model fit of \cc{FE} against \cc{EngDispl} using the \cc{train} function.
+<<>>=
+m1 = train(FE~EngDispl, method = "lm", data = cars2010)
+@
+\item Examine the residuals of this fitted model, plotting residuals against fitted values
+<<fig.width = 6, fig.height = 6>>=
+# extract standardised residuals
+m1resid = rstandard(m1$finalModel)
+# plot of residuals against fitted values
+plot(fitted.values(m1), m1resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+@
+\item What do the residuals tell us about the model fit using this plot? -- There definitely appears to be some trend in the residuals. The curved shape indicates that we potentially require some transformation of variables. A square term might help.
+\item Plot the fitted values vs the observed values
+<<fig.width = 6, fig.height = 6>>=
+plot(cars2010$FE, fitted.values(m1$finalModel),
+     xlim = range(cars2010$FE), ylim = range(cars2010$FE))
+abline(0,1)
+@
+\item What does this plot tell us about the predictive performance of this model across the range of the response? -- We seem to slightly over estimate more often than not in the 25-35 range. For the upper end of the range we seem to always under estimate the true values.
+\item Produce other diagnostic plots of this fitted model -- other diagnostic plots to consider are qq plots of the residuals, residuals against fitted values
+<<fig.width = 7, fig.height = 4>>=
+op = par(mfrow = c(1,2))
+qqnorm(m1resid)
+qqline(m1resid)
+plot(cars2010$EngDispl, m1resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+par(op)
+@
+
+\item Are the modelling assumptions justified? -- We are struggling to justify the assumption of normality in the residuals here, all of the diagnostics indicate patterns remain in the residuals that are currently unexplained by the model.
+
+\item Do you think adding a quadratic term will improve the model fit? -- It seems likely, both the residuals against fitted values and the residuals against the predictor indicate a parabola shape in the residuals suggesting that a quadratic term may improve model fit.
+
+\item Fit a model with the linear and quadratic terms for \cc{EngDispl} and call it \cc{m2}
+<<>>=
+m2 = train(FE~poly(EngDispl,2), method = "lm", data = cars2010)
+@
+
+\item Assess the modelling assumptions for this new model -- We could create the same set of diagnostics
+<<>>=
+m2resid = rstandard(m2$finalModel)
+
+op = par(mfrow = c(2,2))
+# plot of residuals against fitted values
+plot(fitted.values(m2), m2resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+#fitted vs observed
+plot(cars2010$FE, fitted.values(m2$finalModel),
+     xlim = range(cars2010$FE), ylim = range(cars2010$FE))
+abline(0,1)
+# qq
+qqnorm(m2resid)
+qqline(m2resid)
+# resid vs predictor
+plot(cars2010$EngDispl, m2resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+par(op)
+@
+
+\item  How do the two models compare? -- The residual diagnostics indicate a better fit now that the quadratic term has been included. We could also look at the predicted line through the points
+<<fig.width = 7, fig.height = 4>>=
+xs = data.frame(EngDispl = sort(cars2010$EngDispl))
+op = par(mfrow = c(1,2))
+plot(cars2010$EngDispl, cars2010$FE, col = "grey")
+lines(xs$EngDispl,predict(m1,xs),col = 2)
+plot(cars2010$EngDispl, cars2010$FE, col = "grey")
+lines(xs$EngDispl,predict(m2,xs),col = 2)
+par(op)
+@
+
+\item How does transforming the response variable affect the fit? -- We can look at a log transform
+<<>>=
+m3 = train(log(FE)~poly(EngDispl,2), data = cars2010, method = "lm")
+m3resid = rstandard(m3$finalModel)
+op = par(mfrow = c(2,2))
+# plot of residuals against fitted values
+plot(fitted.values(m3), m3resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+#fitted vs observed
+plot(log(cars2010$FE), fitted.values(m3$finalModel),
+     xlim = range(log(cars2010$FE)), ylim = range(log(cars2010$FE)))
+abline(0,1)
+# qq
+qqnorm(m3resid)
+qqline(m3resid)
+# resid vs predictor
+plot(cars2010$EngDispl, m3resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+par(op)
+@
+Perhaps the residuals more closely match the assumption of normality under this transformation. However we need to be careful about interpretation now as the response is on the log scale. Likewise for prediction we need to remember to undo the transformation.
+
+\item  Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}
+<<>>=
+m5 = train(FE~EngDispl + NumCyl, data = cars2010, method = "lm")
+@
+\item Examine model fit and compare to the original. 
+<<>>=
+m5resid = rstandard(m5$finalModel)
+op = par(mfrow = c(2,3))
+# plot of residuals against fitted values
+plot(fitted.values(m5), m5resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+#fitted vs observed
+plot(cars2010$FE, fitted.values(m5$finalModel),
+     xlim = range(cars2010$FE), ylim = range(cars2010$FE))
+abline(0,1)
+# qq
+qqnorm(m5resid)
+qqline(m5resid)
+# resid vs predictor
+plot(cars2010$EngDispl, m5resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+# resid vs predictor
+plot(cars2010$NumCyl, m5resid)
+abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
+par(op)
+@
+Fit doesn't appear much improved from these plots, perhaps we still need to reintroduce the quadratic term for EngDispl, and consider whether we need to transform NumCyl or the response after that.
+
+\item Does the model improve with the addition of an extra variable? -- Not without the addition of extra terms.
+
+\item If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
+<<>>=
+m6 = train(FE~EngDispl*NumCyl, method = "lm", data = cars2010)
+op = par(mfrow = c(1,2))
+plot3d(m5,cars2010$EngDispl, cars2010$NumCyl,cars2010$FE)
+plot3d(m6,cars2010$EngDispl, cars2010$NumCyl,cars2010$FE)
+par(op)
+@
+The rate of change of fuel economy with respect to the number of cylinders depends on the EngDispl when the interaction is included.
+
+
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,431 @@
+%\VignetteIndexEntry{practical1}
+%!Snw weave = knitr
+%\VignetteEngine{knitr::knitr}
+
+
+\documentclass[a4paper,justified,openany]{tufte-handout}
+<<setup, echo=FALSE, cache=FALSE>>=
+
+library(knitr)
+opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+              cache = TRUE, size = "small", message = FALSE,
+              fig.path='knitr_figure/graphics-', 
+               cache.path='knitr_cache/graphics-', 
+               fig.align='center', 
+               dev='pdf', fig.width=5, fig.height=5)
+
+knit_hooks$set(par=function(before, options, envir){
+    if (before && options$fig.show!='none') {
+        par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+            mgp=c(2,.7,0),tcl=-.01, las=1)
+}}, crop=hook_pdfcrop)
+# knit_theme$set(knit_theme$get("greyscale0"))
+
+opts_knit$set(out.format = "latex")
+
+# options(replace.assign=FALSE,width=50)
+# opts_chunk$set(fig.path='knitr_figure/graphics-',
+# cache.path='knitr_cache/graphics-',
+# fig.align='center',
+# dev='pdf', fig.width=5, fig.height=5,
+# fig.show='hold', cache=FALSE, par=TRUE)
+# knit_hooks$set(crop=hook_pdfcrop)
+# knit_hooks$set(par=function(before, options, envir){
+# if (before && options$fig.show!='none') {
+# par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+# mgp=c(2,.7,0),tcl=-.01, las=1)
+# }}, crop=hook_pdfcrop)
+
+#if(!file.exists("graphics")) stop("doesn't exist") #
+dir.create("graphics")
+@
+\usepackage{amsmath}
+% Set up the images/graphics package
+\usepackage{graphicx}
+\setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
+%\graphicspath{{vignettes/graphics/}}
+\title{Predictive Analytics: practical 1}
+\date{} % if the \date{} command is left out, the current date will be used
+% The following package makes prettier tables. We're all about the bling!
+\usepackage{booktabs}
+% The units package provides nice, non-stacked fractions and better spacing
+% for units.
+\usepackage{units}
+% The fancyvrb package lets us customize the formatting of verbatim
+% environments. We use a slightly smaller font.
+\usepackage{fancyvrb}
+\fvset{fontsize=\normalsize}
+\newcommand{\cc}{\texttt}
+\graphicspath{{../graphics/}}
+\setcounter{secnumdepth}{2}
+\usepackage{microtype}
+\begin{document}
+
+\maketitle% this prints the handout title, author, and date
+
+\section*{Course R package}
+Installing the course R package\sidenote{A package is an \textit{add-on} or a \textit{module}. It provides additional functions and data.}
+is straightforward. First install \cc{drat}:
+<<eval=FALSE, tidy=FALSE>>=
+install.packages("drat")
+@
+\noindent Then
+<<eval=FALSE, tidy=FALSE>>=
+drat::addRepo("rcourses")
+install.packages("nclRpredictive", type="source")
+@
+\noindent This R package contains copies of the practicals, solutions and data sets that we require. To load the package, use
+<<>>=
+library(nclRpredictive)
+@
+\noindent To install the \cc{caret} package for model fitting, if you don't already have it, and then load it in
+<<eval = FALSE>>=
+install.packages("caret")
+library(caret)
+@
+<<echo = FALSE, message=FALSE>>=
+library(caret)
+@
+
+The \cc{cars2010} data set contains information about car models in $2010$. The aim is to model the \cc{FE} variable which is a fuel economy measure based on 13 predictors.
+
+\noindent The data is part of the \cc{AppliedPredictiveModeling} package and can be loaded by,
+<<>>=
+data(FuelEconomy,package = "AppliedPredictiveModeling")
+@
+\noindent further information can be found in the help page
+<<eval = FALSE>>=
+?cars2010
+@
+\noindent or to see the variable names
+<<>>=
+colnames(cars2010)
+@ 
+
+There are a lot of questions to be considered below marked out by bullet points in the document. Don't worry if you can't finish them all, I intended for there to be enough such that if anyone wants to continue trying things at home they can.
+
+\begin{itemize}
+  \item Prior to any analysis we should get an idea of the relationships between variables in the data.\marginnote{The \cc{FE $\sim$ .} notation is shorthand for FE against all variables in the data frame specified by the \cc{data} argument.}
+\end{itemize}
+
+The first few are shown in figure~\ref{fig:fig1_1}.
+
+% Prior to any analysis we should get an idea of the relationships between variables in the data.\marginnote{The \cc{FE $\sim$ .} notation is shorthand for FE against all variables in the data frame specified by the \cc{data} argument.} The first few are shown in figure~\ref{fig:fig1_1}.
+
+
+<<echo = FALSE, message = FALSE>>=
+pdf("graphics/figure1_1.pdf", width = 7, height = 4)
+op = par(mfrow = c(1,2))
+plot(FE ~ EngDispl + NumCyl, data = cars2010)
+par(op)
+sink = dev.off()
+system("pdfcrop graphics/figure1_1.pdf && mv graphics/figure1_1-crop.pdf graphics/figure1_1.pdf")
+@
+\begin{figure}[!ht]
+  \includegraphics[width = \textwidth]{graphics/figure1_1}
+  \caption{Plotting the response against some of the predictor variables in the \cc{cars2010} data set.}
+  \label{fig:fig1_1}
+\end{figure}
+
+An alternative to using \cc{pairs} is to specify a plot device that has enough
+space for the number of plots required to plot the response against
+each predictor. We don't get all the pairwise information amongst predictors but it saves a lot of space on the plot and makes it easier to see what's going on. Its also a good idea to make smaller margins. 
+<<eval = FALSE>>=
+ncol(cars2010)
+op = par(mfrow = c(3,5), mar = c(4,2,1,1.5))
+plot(FE~., data = cars2010)
+par(op)
+@
+
+\begin{itemize}
+  \item Create a simple linear model fit of \cc{FE} against \cc{EngDispl} using the \cc{train} function.\sidenote{Remember, to specify a particular model type we use the \cc{method} argument.}
+\end{itemize}
+
+% \noindent Create a simple linear model fit of \cc{FE} against \cc{EngDispl} using the \cc{train} function.\sidenote{Remember, to specify a particular model type we use the \cc{method} argument.}
+
+<<echo = FALSE>>=
+m1 = train(FE ~ EngDispl, method = "lm", data = cars2010)
+@
+
+% <<>>=
+% m1 = train(FE ~ EngDispl, method = "lm", data = cars2010)
+% @
+
+\begin{itemize}
+\item Examine the residuals of this fitted model, plotting residuals against fitted values
+\end{itemize}
+
+% Examine the residuals of this fitted model
+% <<eval = FALSE>>=
+% plot(fitted.values(m1$finalModel),rstandard(m1$finalModel))
+% @
+
+\noindent We can add the lines showing where we expect the residuals to fall to aid graphical inspection
+<<eval = FALSE>>=
+abline(h = c(-2,0,2),col = c(2,3,2), lty = c(2,1,2))
+@
+
+\begin{itemize}
+  \item What do the residuals tell us about the model fit using this plot? 
+\end{itemize}
+% \noindent What do the residuals tell us about the model fit using this plot? 
+%% It is often useful to add a smooth line through the points on the plot. This can be helpful for identifying possible transformations of variables.
+%% <<>>=
+%% @ 
+
+% We could also examine a plot of the fitted values vs the observations,\sidenote{the \cc{xlim} and \cc{ylim} arguments ensure that the plot encompasses the full range of observations such that the plot is not misleading.}
+% <<eval = FALSE>>=
+% plot(cars2010$FE, fitted.values(m1$finalModel), 
+%      xlim = range(cars2010$FE), ylim = range(cars2010$FE))
+% abline(0,1)
+% @
+
+\begin{itemize}
+\item Plot the fitted values vs the observed values
+  \item What does this plot tell us about the predictive performance of this model across the range of the response?
+\end{itemize}
+
+% \noindent What does this plot tell us about the predictive performance of this model across the range of the response?
+
+\begin{itemize}
+  \item Produce other diagnostic plots of this fitted model
+  \item Are the modelling assumptions justified?
+\end{itemize}
+
+% Other plots that can be useful include a qqplot of the residuals to assess the assumption of normality.\sidenote{The \cc{qqnorm} and \cc{qqline} functions can be used for this.}
+% <<eval = FALSE>>=
+% qqnorm(resid(m1))
+% qqline(resid(m1))
+% @
+% \noindent I also quite like
+% <<echo = FALSE>>=
+% pdf("graphics/figure1_2.pdf", width = 3, height = 3)
+% xres = sort(resid(m1))
+% hist(xres, breaks = 50, freq = FALSE)
+% lines(xres,dnorm(xres,mean(xres),sd(xres)))
+% sink = dev.off()
+% system("pdfcrop graphics/figure1_2.pdf && mv graphics/figure1_2-crop.pdf graphics/figure1_2.pdf")
+% @ 
+% <<eval = FALSE>>=
+% xres = sort(resid(m1))
+% hist(xres, breaks = 50, freq = FALSE)
+% lines(xres,dnorm(xres,mean(xres),sd(xres)))
+% @
+% \begin{marginfigure}
+%   \includegraphics[]{graphics/figure1_2}
+%   \caption{Using a histogram to pick out skewness and heteroskedasticity of the residuals. Here the histogram fits under the normal curve reasonably well, little evidence of skewness or issues with the assumption of normality.}
+%   \label{fig:fig1_2}
+% \end{marginfigure}
+% \noindent which helps identify skewness in the residuals, possibly an indicator of heteroskedasticity, see figure~\ref{fig:fig1_2}.\sidenote{Heteroskdasticity is non--constant variance of the residuals. One of the assumptions was that the residuals share a common variance.}
+% \noindent We should also look at the residuals against each of the predictors. Plot the residuals against the \cc{EngDispl} predictor that was used to fit the model. 
+
+\begin{itemize}
+  \item Do you think adding a quadratic term will improve the model fit?
+  \item Fit a model with the linear and quadratic terms for \cc{EngDispl} and call it \cc{m2}
+\end{itemize}
+
+% Do you think adding a quadratic term will improve the model fit? Fit a model with the linear and quadratic terms for \cc{EngDispl} and call it \cc{m2}.
+
+<<echo = FALSE>>=
+m2 = train(FE ~ poly(EngDispl,2,raw = TRUE), data = cars2010, 
+    method = "lm")
+#plot(fitted.values(m2$finalModel), rstandard(m2$finalModel))
+#abline(h = c(-2,0,2),col = c(2,3,2), lty = c(2,1,2))
+@
+
+\begin{itemize}
+  \item Assess the modelling assumptions for this new model
+  \item How do the two models compare?
+\end{itemize}
+
+% \noindent Comparing the two models side by side we can see how the fitted model affects prediction.
+% <<eval = FALSE>>=
+% # set up a grid of points for prediction
+% newdata = data.frame(EngDispl = sort(cars2010$EngDispl))
+% op = par(mfrow = c(1,2))
+% plot(cars2010$EngDispl, cars2010$FE, col = "grey")
+% lines(newdata$EngDispl, predict(m1, newdata))
+% plot(cars2010$EngDispl, cars2010$FE, col = "grey")
+% lines(newdata$EngDispl, predict(m2, newdata))
+% par(op)
+% @ 
+
+<<echo = FALSE>>=
+# set up a grid of points for prediction
+newdata = data.frame(EngDispl = sort(cars2010$EngDispl))
+
+pdf("graphics/figure1_3.pdf", width = 7, height = 4)
+op = par(mfrow = c(1,2))
+plot(cars2010$EngDispl, cars2010$FE, col = "grey")
+lines(newdata$EngDispl, predict(m1, newdata))
+plot(cars2010$EngDispl, cars2010$FE, col = "grey")
+lines(newdata$EngDispl, predict(m2, newdata))
+par(op)
+sink = dev.off()
+system("pdfcrop graphics/figure1_3.pdf && mv graphics/figure1_3-crop.pdf graphics/figure1_3.pdf")
+@
+
+% \begin{figure}[!ht]
+%   \centering
+%   \includegraphics[width = \textwidth]{graphics/figure1_3}
+%   \caption{Comparing fitted models for linear regression using \cc{EngDispl} as a predictor for \cc{FE}. Left, linear term only. Right, quadratic term included.}
+%   \label{fig:fig1_3}
+% \end{figure}
+
+<<echo = FALSE, eval = FALSE>>=
+## set up a dataframe for prediction
+predictx = data.frame(
+    EngDispl = seq(
+        min(cars2010$EngDispl), 
+        max(cars2010$EngDispl), 
+        length.out = 100))
+
+op = par(mfrow = c(1,2))
+plot(cars2010$EngDispl, cars2010$FE, col = "grey")
+lines(predictx$EngDispl, predict(m1,predictx), col = 2)
+plot(cars2010$EngDispl, cars2010$FE, col = "grey")
+lines(predictx$EngDispl, predict(m2,predictx), col = 2)
+par(op)
+@
+
+\begin{itemize}
+  \item How does transforming the response variable affect the fit?\marginnote{Common transformations may be a log or square root function.}
+\end{itemize}
+% How does transforming the response variable affect the fit? Common transformations may be a log or square root function.
+
+<<echo = FALSE, eval = FALSE>>=
+op = par(mfrow= c(2,2), col = "grey")
+m3 = train(log(FE) ~ EngDispl, method = "lm", data = cars2010)
+plot(fitted.values(m3$finalModel), rstandard(m3$finalModel))
+abline(h = c(-2,0,2), col = c(2,3,2), lty = c(2,1,2))
+plot(log(cars2010$FE), fitted.values(m3$finalModel), 
+     xlim = range(log(cars2010$FE)), 
+     ylim = range(log(cars2010$FE)))
+abline(0,1, col = 1)
+## examine prediction on the log scale
+plot(cars2010$EngDispl, log(cars2010$FE))
+lines(predictx$EngDispl, predict(m3,predictx), col = 2)
+## and on the original scale
+plot(cars2010$EngDispl, cars2010$FE)
+lines(predictx$EngDispl, exp(predict(m3,predictx)), col = 2)
+par(op)
+
+
+op = par(mfrow= c(2,2), col = "grey")
+m4 = train(log(FE) ~ poly(EngDispl,2,raw = TRUE), 
+    method = "lm", data = cars2010)
+plot(fitted.values(m4$finalModel), rstandard(m4$finalModel))
+abline(h = c(-2,0,2), col = c(2,3,2), lty = c(2,1,2))
+plot(log(cars2010$FE), fitted.values(m4$finalModel), 
+     xlim = range(log(cars2010$FE)), 
+     ylim = range(log(cars2010$FE)))
+abline(0,1, col = 1)
+## examine prediction on the log scale
+plot(cars2010$EngDispl, log(cars2010$FE))
+lines(predictx$EngDispl, predict(m4,predictx), col = 2)
+## and on the original scale
+plot(cars2010$EngDispl, cars2010$FE)
+lines(predictx$EngDispl, exp(predict(m4,predictx)), col = 2)
+par(op)
+
+@
+
+\begin{itemize}
+  \item Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}
+  \item Examine model fit and compare to the original. 
+  \item Does the model improve with the addition of an extra variable?
+\end{itemize}
+
+% Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}. Examine model fit and compare to the original. Does the model improve with the addition of an extra variable?
+We could create a 3D plot to investigate what the fitted model looks like against both independent variables simultaneously.
+<<echo = FALSE>>=
+m5 = train(FE~EngDispl + NumCyl + EngDispl:NumCyl, data = cars2010, method = "lm")
+@
+
+<<eval = FALSE>>=
+newdata = expand.grid(
+  EngDispl = seq(
+      min(cars2010$EngDispl), 
+      max(cars2010$EngDispl),
+      length.out = 100),
+  NumCyl = seq(
+      min(cars2010$NumCyl), 
+      max(cars2010$NumCyl),
+      length.out = 100))
+preddata = predict(m5, newdata)
+persp( unique(newdata$EngDispl), 
+      unique(newdata$NumCyl), 
+      matrix(preddata,nrow = 100), 
+      phi = 30, theta = 30)
+@
+The \cc{phi} and \cc{theta} arguments specify the rotation of the plot in degrees. You can play around with these values until the plot is clear, I find a value of 30 for each often works well. It should be clear to see that as both engine displacement and number of cylinders increase the fitted surface predicts a lower fuel economy.
+Alternatively the \cc{nclRpredictive} package contains a \cc{plot3d} function to help with viewing these surfaces in 3D as in figure~\ref{fig:fesurface}.\sidenote{We can also add the observed points to the plot using the \cc{points} argument to this function, see the help page for further information.}
+<<eval = FALSE>>=
+plot3d(m5,cars2010$EngDispl, cars2010$NumCyl, cars2010$FE)
+@
+<<echo = FALSE>>=
+pdf("graphics/fesurface.pdf", width = 4, height = 4)
+plot3d(m5,cars2010$EngDispl, cars2010$NumCyl, cars2010$FE)
+sink = dev.off()
+system("pdfcrop graphics/fesurface.pdf")
+@
+\begin{marginfigure}
+  \includegraphics[]{graphics/fesurface-crop}
+  \caption{A surface plot from a linear model of fuel economy against the number of cylinders and engine displacement including the interaction term.}
+  \label{fig:fesurface}
+\end{marginfigure}
+
+
+\begin{itemize}
+  \item Try fitting other variations of this model using these two predictors, how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface.
+  \item If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
+\end{itemize}
+
+% Try fitting other variations of this model using these two predictors, how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface. If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
+
+One way to guage how well your model is performing is to hold out a set of observations from the training data. Then examine how well your model extends to the data that wasn't used for training. We will see more of this in coming chapters of the notes.
+<<>>=
+# set up a set of indicies that will be included 
+# in the training data
+trainIndex = sample(nrow(cars2010), 900)
+# create two data frames, a training and a test set
+# by taking subsets using this set of indicies
+# here we use 900 observations to train the model
+# and the rest for testing
+carstrain = cars2010[trainIndex,]
+carstest = cars2010[-trainIndex,]
+# train the model and predict
+mtrain = train(FE~EngDispl + NumCyl, data = carstrain, 
+               method = "lm")
+prediction = predict(mtrain, carstest)
+
+# residuals of the test set
+res = prediction - carstest$FE
+# calculate RMSE
+sqrt(mean(res*res))
+@
+
+Having a small value here indicates that my model does a good job of predicting for observations that weren't used to train the model.
+
+\section*{\textbf{In the spirit of competition \ldots}}
+Try to fit the best model that you can using the cars 2010 data set and the above tools. I have a set of data that you haven't yet seen. Once you are happy with your model you can validate it using the \cc{validate} function in the \cc{nclRpredictive} package.
+<<eval = FALSE>>=
+m1validated = validate(model = m1)
+@
+
+\section*{Other data sets}
+A couple of other data sets that can be used to try fitting linear regression models.
+\begin{table}[!h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+  data set & package & response \\
+  \hline
+  diamonds & ggplot2 & price \\
+  Wage & ISLR & wage \\
+  BostonHousing & mlbench & medv \\
+  \hline
+\end{tabular}
+\end{table}
+
+\end{document}

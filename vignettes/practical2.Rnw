@@ -1,0 +1,378 @@
+%\VignetteIndexEntry{practical2}
+%!Snw weave = knitr
+%\VignetteEngine{knitr::knitr}
+
+\documentclass[a4paper,justified,openany]{tufte-handout}
+<<setup, echo=FALSE, cache=FALSE>>=
+if(!file.exists("graphics")) dir.create("graphics")
+# e = tryCatch(dir.create("graphics"), error = function(e) e)
+library(knitr)
+opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+              cache = TRUE, size = "small", message = FALSE,
+              fig.path='knitr_figure/graphics-', 
+               cache.path='knitr_cache/graphics-', 
+               fig.align='center', 
+               dev='pdf', fig.width=5, fig.height=5)
+
+knit_hooks$set(par=function(before, options, envir){
+    if (before && options$fig.show!='none') {
+        par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+            mgp=c(2,.7,0),tcl=-.01, las=1)
+}}, crop=hook_pdfcrop)
+# knit_theme$set(knit_theme$get("greyscale0"))
+
+opts_knit$set(out.format = "latex")
+
+# options(replace.assign=FALSE,width=50)
+# opts_chunk$set(fig.path='knitr_figure/graphics-',
+# cache.path='knitr_cache/graphics-',
+# fig.align='center',
+# dev='pdf', fig.width=5, fig.height=5,
+# fig.show='hold', cache=FALSE, par=TRUE)
+# knit_hooks$set(crop=hook_pdfcrop)
+# knit_hooks$set(par=function(before, options, envir){
+# if (before && options$fig.show!='none') {
+# par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+# mgp=c(2,.7,0),tcl=-.01, las=1)
+# }}, crop=hook_pdfcrop)
+@
+\usepackage{amsmath}
+% Set up the images/graphics package
+\usepackage{graphicx}
+\setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
+\graphicspath{{graphics/}}
+\title{Predictive Analytics: practical 2}
+\date{} % if the \date{} command is left out, the current date will be used
+% The following package makes prettier tables. We're all about the bling!
+\usepackage{booktabs}
+% The units package provides nice, non-stacked fractions and better spacing
+% for units.
+\usepackage{units}
+% The fancyvrb package lets us customize the formatting of verbatim
+% environments. We use a slightly smaller font.
+\usepackage{fancyvrb}
+\fvset{fontsize=\normalsize}
+\newcommand{\cc}{\texttt}
+\graphicspath{{../graphics/}}
+\setcounter{secnumdepth}{2}
+\usepackage{microtype}
+
+\begin{document}
+
+\maketitle% this prints the handout title, author, and date
+
+% \section*{Course R package}
+% Installing the course R package\sidenote{A package is an \textit{add-on} or a \textit{module}. It provides additional functions and data.}
+% is straightforward. First install \cc{drat}:
+% <<eval=FALSE, tidy=FALSE>>=
+% install.packages("drat")
+% @
+% \noindent Then
+% <<eval=FALSE, tidy=FALSE>>=
+% drat::addRepo("rcourses")
+% install.packages("nclRpredictive", type="source")
+% @
+% \noindent This R package contains copies of the practicals, solutions and data sets that we require. To load the package, use
+% <<>>=
+% library(nclRpredictive)
+% @
+% \noindent To install the \cc{caret} package for model fitting, if you don't already have it, and then load it in
+% <<eval = FALSE>>=
+% install.packages("caret")
+% library(caret)
+% @
+<<echo = FALSE, message = FALSE>>=
+library(caret)
+@
+\section*{The OJ data set}
+
+The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of two brands of orange juice customers purchased and can be loaded in using
+<<>>=
+data(OJ, package = "ISLR")
+@
+
+\begin{itemize}
+  \item Make an initial examination of the relationships between each of the predictors and the response\sidenote{We can use the plot function with a model formula.}
+\end{itemize}
+
+% An initial examination of the relationships between each of the predictors and the response:
+% <<eval = FALSE>>=
+% # make sure the graphics device has enough space
+% ncol(OJ)
+% op = par(mfrow = c(4,5), mar = c(4,1,1,1))
+% plot(Purchase ~ ., data = OJ)
+% par(op)
+% @
+
+\begin{itemize}
+  \item To begin  create a logistic regression model that takes into consideration the prices of the two brands of orange juice.\sidenote{Hint: The train function does model fitting, the method argument specifies the type of model. \cc{method = ``glm''} is used for logistic regression.}
+\end{itemize}
+% To begin with we can create a logistic regression model that takes into consideration the prices of the two brands of orange juice.
+% 
+% <<>>=
+% m.price= train(Purchase ~ PriceCH + PriceMM, 
+%                data = OJ, method = "glm")
+% @
+
+<<echo = FALSE>>=
+m.price= train(Purchase ~ PriceCH + PriceMM, 
+               data = OJ, method = "glm")
+@
+
+\begin{itemize}
+  \item What proportion of purchases does this model get right?
+  \item How does this compare to if we used no model?
+\end{itemize}
+
+% We can see what proportion of purchases this model got right,
+% <<eval = FALSE>>=
+% sum(predict(m.price,OJ) == OJ$Purchase)/nrow(OJ)
+% @
+
+% \noindent how does this compare to if we used no model?
+
+The following code produces a plot of the decision boundary as seen in figure~\ref{fig:purchaseboundary}.
+<<eval = FALSE>>=
+# set up a grid for prediction
+chrange = range(OJ$PriceCH)
+mmrange = range(OJ$PriceMM)
+chseq = seq(chrange[1],chrange[2],length.out = 100)
+mmseq = seq(mmrange[1],mmrange[2],length.out = 100)
+grid = expand.grid("PriceCH" = chseq, "PriceMM" = mmseq)
+
+# make the predictions
+predictions = predict(m.price,grid,type = "prob")
+# turn the predictions into a matrix for a contour plot
+predmat = matrix(predictions[,2],nrow=100)
+contour(chseq, mmseq, predmat, levels = 0.5,
+        xlab = "Price CH", ylab = "Price MM",
+        lwd = 2, main = "Blue = MM")
+
+# the background points indicating prediction
+points(grid,col = c("red","blue")[predict(m.price,grid)], 
+       cex = 0.2)
+# there are few unique combinations of prices, 
+# jitter can help see the points
+# points of prices coloured by purchased brand
+points(jitter(OJ$PriceCH,factor = 2),
+       jitter(OJ$PriceMM, factor = 2),
+       col = c("red","blue")[OJ$Purchase], 
+       pch = 19, cex  =0.6)
+
+# add dashed line of equal price
+abline(0,1,lwd = 2, lty = 2)
+@
+
+<<echo = FALSE>>=
+chrange = range(OJ$PriceCH)
+mmrange = range(OJ$PriceMM)
+chseq = seq(chrange[1],chrange[2],length.out = 100)
+mmseq = seq(mmrange[1],mmrange[2],length.out = 100)
+grid = expand.grid("PriceCH" = chseq, "PriceMM" = mmseq)
+
+# make the predictions
+predictions = predict(m.price,grid,type = "prob")
+# turn the predictions into a matrix for a contour plot
+predmat = matrix(predictions[,2],nrow=100)
+pdf("graphics/purchaseboundary.pdf", width = 4, height = 4)
+contour(chseq, mmseq, predmat, levels = 0.5,
+        xlab = "Price CH", ylab = "Price MM",
+        lwd = 2, main = "Blue = MM")
+# the background points indicating prediction
+points(grid,col = c("red","blue")[predict(m.price,grid)], 
+       cex = 0.2)
+# there are few unique combinations of prices, 
+# jitter can help see the points
+# points of prices coloured by purchased brand
+points(jitter(OJ$PriceCH,factor = 2),jitter(OJ$PriceMM, factor = 2),col = c("red","blue")[OJ$Purchase], pch = 19, cex = 0.6)
+# add dashed line of equal price
+abline(0,1,lwd = 2, lty = 2)
+sink = dev.off()
+system("pdfcrop graphics/purchaseboundary.pdf")
+@
+
+\begin{marginfigure}
+  \includegraphics[width = \textwidth]{graphics/purchaseboundary-crop}
+  \caption{Examining the decision boundary for orange juice brand purchases by price.}
+  \label{fig:purchaseboundary}
+\end{marginfigure}
+
+%% \textbf{XXX: Typing the above code will take a while. Look at the nclRexercises
+%% package and use the same trick to allow partipants to load the code}
+\begin{itemize}
+  \item What happens if we add an interaction term? How does the boundary change?
+\end{itemize}
+% What happens if we add an interaction term? How does the boundary change?
+% \marginnote{The \cc{PriceMM$\ast$PriceCH} notation can be used as a shorthand for the two individual terms and an interaction term.}
+
+\section*{Using all of the predictors}
+\begin{itemize}
+  \item Fit a logistic regression model using all of the predictors
+  \item Is there a problem?
+\end{itemize}
+
+We can view the most recent warning messages by using the \cc{warnings} function
+<<eval = FALSE>>=
+warnings()
+@
+
+<<warning = FALSE, echo = FALSE>>=
+m.log = train(Purchase ~ ., data = OJ, method = "glm")
+@
+% We can try to fit a logistic regression model using all of the predictors
+% <<warning = FALSE>>=
+% m.log = train(Purchase ~ ., data = OJ, method = "glm")
+% @
+% \noindent which yields a number of warnings, we could view these with
+% <<eval = FALSE>>=
+% warnings()
+% @
+\noindent This suggests some rank--deficient fit problems,
+% \noindent This suggests some rank--deficient fit problems, if we look at the model summary
+
+\begin{itemize}
+  \item Look at the model summary, you should notice that a number of parameters have note been estimated
+\end{itemize}
+% <<>>=
+% summary(m.log)
+% @
+% we see that a number of parameters have not been estimated.
+<<eval = FALSE>>=
+?ISLR::OJ
+@
+\noindent gives further insight, the \cc{PriceDiff} variable is a linear combination of \cc{SalePriceMM} and \cc{SalePriceCH} so we should remove this. In addition we have a \cc{StoreID} variable and a \cc{STORE} variable are different encodings of the same information so we should remove one of these too. We also have \cc{DiscCH} and \cc{DiscMM} which are the differences between \cc{PriceCH} and \cc{SalePriceCH} and 
+\cc{PriceMM} and \cc{SalePriceMM} respectively and \cc{ListPriceDiff} is a linear combination of these prices. Removing all of these vairables allows the model to be fit and all parameters to be estimated.\sidenote{This is to highlight that we need to understand what we have in our data.}
+<<>>=
+OJsub = OJ[!(colnames(OJ) %in% c("STORE", "SalePriceCH",
+           "SalePriceMM","PriceDiff", "ListPriceDiff"))]
+OJsub$Store7 = as.double(OJsub$Store7) - 1
+m.log = train(Purchase ~ ., data = OJsub, method = "glm")
+@
+
+The problem of linear combinations of predictors can be shown with this simple theoretical example. Suppose we have a response $y$ and three predictors $x_1$, $x_2$ and the linear combination $(x_1 + x_2)$. On fitting a linear model we try to find estimates of the parameters in the equation
+\begin{align}
+y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 (x_1 + x_2).
+\end{align}
+\noindent However we could just as easily rewrite this as
+\begin{align}
+y &= \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 (x_1 + x_2) \\
+&= \beta_0 + (\beta_1 + \beta_3) x_1 + (\beta_2 + \beta_3) x_2 \\
+&= \beta_0 + \beta_1^{\ast} x_1 + \beta_2^{\ast} x_2.
+\end{align}
+This leads to a rank deficient model matrix, essentially we can never find the value of the $\beta_3$ due to the fact we have the linear combination of predictors.
+
+We could acheive the same using the caret package function \cc{findLinearCombos}. The function takes a model matrix as an argument. We can create such a matrix using the 
+\cc{model.matrix} function with our formula object
+<<>>=
+remove = findLinearCombos(model.matrix(Purchase~., data = OJ))
+@
+The output list has a component called \cc{remove} suggesting which variables should be removed to get rid of linear combinations
+<<>>=
+(badvar = colnames(OJ)[remove$remove])
+OJsub = OJ[,-(remove$remove)]
+@
+
+\begin{itemize}
+  \item How accurate is this new model using more predictors?
+  \item What are the values of sensitivity and specificity?
+  \item What does this mean?
+\end{itemize}
+% Now that we have fitted a simple model we can look at it's accuracy using the \cc{confusionMatrix} function
+% <<>>=
+% confusionMatrix(predict(m.log),OJsub$Purchase)
+% @
+
+\section*{ROC curves}
+If we were interested in the area under the ROC curve, we could retrain the model using the \cc{twoClassSummary} function as an argument to a train control object.
+Alternatively we can use the \cc{roc} function in the \cc{pROC} package. This also allows us to view the ROC curve, see figure~\ref{fig:roc}. 
+<<eval = FALSE>>=
+library(pROC)
+curve = roc(response = OJsub$Purchase, 
+  predictor = predict(m.log, type = "prob")[,"CH"])
+## this makes CH the event of interest
+plot(curve, legacy.axes = TRUE)
+auc(curve)
+@
+<<echo = FALSE, message = FALSE, include = FALSE>>=
+library(pROC)
+curve = roc(response = OJsub$Purchase, 
+  predictor = predict(m.log, type = "prob")[,"CH"]) 
+## this makes CH the event of interest
+pdf("graphics/roc.pdf", width = 4, height = 4)
+par(mfrow = c(1,1))
+plot(curve, legacy.axes = TRUE)
+text(0.2,0.2,round(auc(curve),5))
+sink  =dev.off()
+system("pdfcrop graphics/roc.pdf")
+@
+\begin{figure}
+  \includegraphics[width = \textwidth]{graphics/roc-crop}
+  \caption{An example of a ROC curve for the logistic regression classifier.}
+  \label{fig:roc}
+\end{figure}
+
+\section*{Other classification models}
+\begin{itemize}
+  \item Try fitting models using the other classification algorithms we have seen so far.\marginnote{We have seen LDA, QDA, KNN and logistic regression.}
+  \item How do they compare?
+  \item How does varying the number of nearest neighbours in a KNN affect the model fit?
+\end{itemize}
+% Try fitting models using the other classification algorithms we have seen so far.\marginnote{We have seen LDA, QDA, KNN and logistic regression.} Which ones give the best accuracy? How does varying the number of nearest neighbours in a KNN affect the model fit? Remember we can pass multiple values of $k$ to the train function through using
+% <<eval = FALSE>>=
+% train(Purchase~., data = OJsub, method = "knn", 
+%       # pass multiple values of k to the knn function
+%       tuneGrid = data.frame(k = c(1,5,9,50)))
+% @
+
+We can overlay ROC curves by adding the \cc{add = TRUE} argument.
+
+The KNN algorithm described in the notes can also be used for regression problems. In this case the predicted response is the mean of the k nearest neighbours.
+\begin{itemize}
+  \item Try fitting the KNN model for the regression problem in practical 1. 
+  \item How does this compare to the linear regression models?
+\end{itemize}
+% The KNN algorithm described in the notes can also be used for regression problems. In this case the predicted response is the mean of the k nearest neighbours. Try fitting the KNN model for the regression problem in practical 1. How does this compare to the linear regression models?
+
+\section*{An example with more than two classes}
+The \cc{Glass} data set in the \cc{mlbench} package is a data frame containing examples of the chemical analysis of 7 different types of glass. The goal is to be able to predict which category glass falls into based on the values of the 9 predictors.
+<<eval = FALSE>>=
+data(Glass, package = "mlbench")
+@
+
+A logistic regression model is typically not suitable for more than 2 classes, so try fitting the other models using a training set that consists of 90\% of the available data.\marginnote{The function \cc{createDataPartition} can be used here, see notes for a reminder.}
+
+% \section*{Advanced}
+% 
+% Training of classification models is typically more difficult when there is an imbalance in the two classes in the training set. Models trained from such data typically have high specificity but poor sensitivity or vice versa. Instead of training to maximise accuracy using data from the training set we could try to maximise according to some other criteria, namely sensitivity and specificity being as close to perfect as possible (1,1).
+% 
+% We can define our own functions to train by
+% <<>>=
+% rfctrl = rfeControl(method = "cv")
+% remove = c(1,findLinearCombos(model.matrix(Purchase~., data = OJsub))$remove)
+% remove = c(remove, findCorrelation(cor(model.matrix(Purchase~., data = OJsub)[,-1])))
+% require(doMC)
+% registerDoMC(6)
+% m.log.rfe = rfe(x = model.matrix(Purchase~. , data = OJsub)[,-remove], 
+%                 y = OJsub$Purchase, rfeControl = rfctrl, 
+%                 method = "glm", trControl = trainControl("cv"), tuneLength = 7)
+% @
+% 
+% 
+% 
+% 
+% 
+% <<eval = FALSE>>=
+% var = function(model , response = NULL, predictor = response){
+%   y =as.double(response)
+%   res = residuals(model$finalModel)
+%   plot(predictor, res, col = c("blue","red")[y])
+%   lines(lowess(predictor,res),col="black",lwd=2)
+%   lines(lowess(predictor[y==1],res[y==1]),col="blue")
+% lines(lowess(predictor[y==2],res[y==2]),col="red")
+% abline(h=0,lty=2,col="grey")
+% }
+% @
+% 
+% 
+
+\end{document}

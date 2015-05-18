@@ -1,0 +1,201 @@
+%\VignetteIndexEntry{solutions2}
+%!Snw weave = knitr
+%\VignetteEngine{knitr::knitr}
+
+
+\documentclass[a4paper,justified,openany]{tufte-handout}
+<<setup, echo=FALSE, cache=FALSE>>=
+
+library(knitr)
+opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+              cache = TRUE, size = "small", message = FALSE,
+              fig.path='knitr_figure/graphics-', 
+               cache.path='knitr_cache/graphics-', 
+               fig.align='center', 
+               dev='pdf', fig.width=5, fig.height=5)
+
+knit_hooks$set(par=function(before, options, envir){
+    if (before && options$fig.show!='none') {
+        par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+            mgp=c(2,.7,0),tcl=-.01, las=1)
+}}, crop=hook_pdfcrop)
+# knit_theme$set(knit_theme$get("greyscale0"))
+
+opts_knit$set(out.format = "latex")
+
+# options(replace.assign=FALSE,width=50)
+# opts_chunk$set(fig.path='knitr_figure/graphics-',
+# cache.path='knitr_cache/graphics-',
+# fig.align='center',
+# dev='pdf', fig.width=5, fig.height=5,
+# fig.show='hold', cache=FALSE, par=TRUE)
+# knit_hooks$set(crop=hook_pdfcrop)
+# knit_hooks$set(par=function(before, options, envir){
+# if (before && options$fig.show!='none') {
+# par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+# mgp=c(2,.7,0),tcl=-.01, las=1)
+# }}, crop=hook_pdfcrop)
+
+if(!file.exists("graphics")) dir.create("graphics")
+@
+\usepackage{amsmath}
+% Set up the images/graphics package
+\usepackage{graphicx}
+\setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
+%\graphicspath{{vignettes/graphics/}}
+\title{Predictive Analytics: solutions 2}
+\date{} % if the \date{} command is left out, the current date will be used
+% The following package makes prettier tables. We're all about the bling!
+\usepackage{booktabs}
+% The units package provides nice, non-stacked fractions and better spacing
+% for units.
+\usepackage{units}
+% The fancyvrb package lets us customize the formatting of verbatim
+% environments. We use a slightly smaller font.
+\usepackage{fancyvrb}
+\fvset{fontsize=\normalsize}
+\newcommand{\cc}{\texttt}
+\graphicspath{{../graphics/}}
+\setcounter{secnumdepth}{2}
+\usepackage{microtype}
+\begin{document}
+\maketitle% this prints the handout title, author, and date
+Load in the packages and data set
+<<>>=
+data(OJ, package = "ISLR")
+library(nclRpredictive)
+library(caret)
+@ 
+
+\begin{itemize}
+\item Make an initial examination of the relationships between each of the predictors and the response
+<<eval = FALSE>>=
+op = par(mfrow = c(4,5), mar= c(4,.5,.5,.5))
+plot(Purchase~., data = OJ)
+par(op)
+@ 
+\item To begin  create a logistic regression model that takes into consideration the prices of the two brands of orange juice.
+<<>>=
+m1 = train(Purchase ~ PriceCH + PriceMM,
+    data = OJ, method = "glm")
+@
+\item What proportion of purchases does this model get right?
+<<>>=
+mean(predict(m1) != OJ$Purchase)
+@ 
+\item How does this compare to if we used no model?
+<<>>=
+# with no model we essentially predict according to 
+# proportion of observations in data
+probs = table(OJ$Purchase)/nrow(OJ)
+preds = sample(levels(OJ$Purchase), prob = probs)
+mean(preds != OJ$Purchase)
+@ 
+There is an improvement, we do better using the model, the training error is lower
+\item What happens if we add an interaction term? How does the boundary change?
+<<fig.width = 4, fig.height = 4>>=
+m2 = train(Purchase~PriceCH*PriceMM, data = OJ,
+    method = "glm")
+# set up a grid for prediction
+chrange = range(OJ$PriceCH)
+mmrange = range(OJ$PriceMM)
+chseq = seq(chrange[1],chrange[2],length.out = 100)
+mmseq = seq(mmrange[1],mmrange[2],length.out = 100)
+grid = expand.grid("PriceCH" = chseq, "PriceMM" = mmseq)
+
+# make the predictions
+predictions = predict(m2,grid,type = "prob")
+# turn the predictions into a matrix for a contour plot
+predmat = matrix(predictions[,2],nrow=100)
+contour(chseq, mmseq, predmat, levels = 0.5,
+        xlab = "Price CH", ylab = "Price MM",
+        lwd = 2, main = "Blue = MM")
+
+# the background points indicating prediction
+points(grid,col = c("red","blue")[predict(m2,grid)], 
+       cex = 0.2)
+# there are few unique combinations of prices, 
+# jitter can help see the points
+# points of prices coloured by purchased brand
+points(jitter(OJ$PriceCH,factor = 2),
+       jitter(OJ$PriceMM, factor = 2),
+       col = c("red","blue")[OJ$Purchase], 
+       pch = 19, cex  =0.6)
+
+# add dashed line of equal price
+abline(0,1,lwd = 2, lty = 2)
+@
+We now have a curved decision boundary. There are two regions of where we would predict MM, bottom left, and a tiny one up in the top right.
+\item Fit a logistic regression model using all of the predictors
+<<eval = FALSE>>=
+mLM = train(Purchase~., data = OJ, method = "glm")
+@ 
+\item Is there a problem? -- Yes
+\item Look at the model summary, you should notice that a number of parameters have note been estimated
+<<eval = FALSE>>=
+summary(mLM)
+@ 
+\item How accurate is this new model using more predictors?
+<<>>=
+# the corrected model
+remove = findLinearCombos(model.matrix(Purchase~., data = OJ))
+(badvar = colnames(OJ)[remove$remove])
+OJsub = OJ[,-(remove$remove)]
+mLM = train(Purchase~., data = OJsub, method = "glm")
+mean(predict(mLM,OJsub) == OJsub$Purchase)
+@ 
+\item What are the values of sensitivity and specificity?
+<<>>=
+# could use confusionMatrix
+(cmLM = confusionMatrix(predict(mLM,OJsub),OJsub$Purchase))
+
+# or 
+sensitivity(predict(mLM,OJsub),OJsub$Purchase)
+specificity(predict(mLM,OJsub),OJsub$Purchase)
+@ 
+\item What does this mean? -- The model is fairly good at picking up both positive events, person buys CH, and negative events, MM.
+\item Try fitting models using the other classification algorithms we have seen so far.
+<<>>=
+mKNN = train(Purchase~., data = OJsub, method = "knn")
+mLDA = train(Purchase~., data = OJsub, method = "lda")
+mQDA = train(Purchase~., data = OJsub, method = "qda")
+cmKNN = confusionMatrix(predict(mKNN,OJsub),OJsub$Purchase)
+cmLDA = confusionMatrix(predict(mLDA,OJsub),OJsub$Purchase)
+cmQDA = confusionMatrix(predict(mQDA,OJsub),OJsub$Purchase)
+(info = data.frame(Model = c("logistic","knn","lda","qda"),
+           Accuracy = c(cmLM$overall["Accuracy"],
+               cmKNN$overall["Accuracy"],
+               cmLDA$overall["Accuracy"],
+               cmQDA$overall["Accuracy"]),
+           Sensitivity = c(cmLM$byClass["Sensitivity"],
+               cmKNN$byClass["Sensitivity"],
+               cmLDA$byClass["Sensitivity"],
+               cmQDA$byClass["Sensitivity"]),
+           Specificity = c(cmLM$byClass["Specificity"],
+               cmKNN$byClass["Specificity"],
+               cmLDA$byClass["Specificity"],
+               cmQDA$byClass["Specificity"])))
+@ 
+\item How do they compare? -- Logistic regression and LDA have highest accuracy, QDA is poorest at classifying events, KNN gives most false positives
+\item How does varying the number of nearest neighbours in a KNN affect the model fit?
+<<>>=
+mKNN2 = train(Purchase~., data = OJsub, method = "knn",
+    tuneGrid = data.frame(k = 1:30))
+mKNN2
+@
+Accuracy increases at first with knn before then getting worse after a peak value of 9.
+
+\item Try fitting the KNN model for the regression problem in practical 1.
+<<warning = FALSE, fig.width = 4, fig.height = 4>>=
+data(FuelEconomy, package = "AppliedPredictiveModeling")
+regKNN = train(FE~., data = cars2010, method = "knn")
+regLM = train(FE~., data = cars2010, method = "lm")
+regKNN= validate(regKNN)
+regLM = validate(regLM)
+mark(regKNN)
+mark(regLM)
+@ 
+  \item How does this compare to the linear regression models? -- The KNN regression model is not as good as the linear model at predicting the test set. It overestimates more at the lower end.
+    
+\end{itemize}
+\end{document}
