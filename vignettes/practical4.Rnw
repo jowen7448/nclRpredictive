@@ -58,7 +58,6 @@ opts_knit$set(out.format = "latex")
 \usepackage{microtype}
 
 \begin{document}
-% \SweaveOpts{concordance=TRUE}
 \maketitle% this prints the handout title, author, and date
 
 % \section*{Course R package}
