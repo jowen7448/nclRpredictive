@@ -1,21 +1,17 @@
 language: r
 sudo: true
-
 r_github_packages:
-  - eddelbuettel/drat
-
+- eddelbuettel/drat
 notifications:
   email:
     on_success: change
     on_failure: change
-
 apt_packages:
-  - texlive-science
-  - latex-xcolor
-
+- texlive-science
+- latex-xcolor
 after_success:
-  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
-
+- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash
+  deploy.sh
 env:
   global:
-    secure: QMeamOa/i2AmK6jksQ3lKn0jzNcAx1S604C3f9n6xJF8swDU7vedELhOW+5zTgxtEZg73FyRO8Lm2PP3akY7KcfPNH7oAe+dev/61KccXAX5ThvrryAEy8STxCYX9IVPPwhNaYiIi5jmi+QEqFyBZkGtmtzcFqIS6s3RgHR+XsU=
+    secure: 2w3Xc1FmdzPu2QCxhvBl2aDC5i2GSr+Q70Da6Q1ztZzXzR8Zor19xCHv7m3WQYvHWRiLUx1mNr1RRHarVcdUSTqRajf+qorKhic6xEhzolq7VgkD0EU2Vb3SZHAax6xxAACGOVcxx4Fn248XUQRDzr2FRi7+Jq6iztZrPAwl6v8wAvXrR8URWQeqMT4d2k0YLqNKPnkvKh+6Wp3nJoyQtrAyULUhbjDgZPI8NfMweHkeTLpMSWMUtSZt8iUOYySwySODg0EvDJPXWBlPNGBaPOgarj3ptLqVsBeBGEMQd1cnVnNI93g8kQCpzRcAI/FEEACqEH94mnRTMOkdXw1QCwnlY2bzsDETMUcbN/blU0v6BxlxL8sGSYowzinasDVD7jHg0sPijsH4b5AHH8GSnksoHo7SPYPlbIqC5oQtw5CcPKaZXrhe275epQjrURRUE5qybZ+KIW07A0WOKRd1AeoX30MZYDYhZv/Mv/SqvaYbHZ3k+VLHOjpeRYrZALoX5AC44BdkxLM5F0otpHpzxofZQTODHxQ0t50heGtJ/rmdEdla5T+F36qthTNOLtZXc4247JxD9ZRFK7cTGMN7AnD29gVeF9J+Eve6sYu6D8VTBx28KqSgwEr2aLTcj1ncO8kyzWa0KIH6IQ6ESVvS4YkvrGPVwyqeV7YCaLq7vxo=
