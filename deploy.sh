@@ -16,7 +16,7 @@ addToDrat(){
   git fetch upstream
   git checkout gh-pages
 
-  Rscript -e "drat::insertPackage(devtools::build('../nclRintroduction'), \
+  Rscript -e "drat::insertPackage(devtools::build('../nclRpredictive'), \
     repodir = '.', \
     commit='Travis update: build $TRAVIS_BUILD_NUMBER')"
   git push

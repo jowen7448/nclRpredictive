@@ -1,49 +1,16 @@
 %\VignetteIndexEntry{solutions1}
-%!Snw weave = knitr
-%\VignetteEngine{knitr::knitr}
+%\VignetteEngine{Sweave}
 
 
-\documentclass[a4paper,justified,openany]{tufte-handout}
-<<setup, echo=FALSE, cache=FALSE>>=
 
-library(knitr)
-opts_knit$set(self.contained=FALSE, tidy = TRUE, 
-              cache = TRUE, size = "small", message = FALSE,
-              fig.path='knitr_figure/graphics-', 
-               cache.path='knitr_cache/graphics-', 
-               fig.align='center', 
-               dev='pdf', fig.width=5, fig.height=5)
+\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage{knitr}
 
-knit_hooks$set(par=function(before, options, envir){
-    if (before && options$fig.show!='none') {
-        par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
-            mgp=c(2,.7,0),tcl=-.01, las=1)
-}}, crop=hook_pdfcrop)
-# knit_theme$set(knit_theme$get("greyscale0"))
-
-opts_knit$set(out.format = "latex")
-
-# options(replace.assign=FALSE,width=50)
-# opts_chunk$set(fig.path='knitr_figure/graphics-',
-# cache.path='knitr_cache/graphics-',
-# fig.align='center',
-# dev='pdf', fig.width=5, fig.height=5,
-# fig.show='hold', cache=FALSE, par=TRUE)
-# knit_hooks$set(crop=hook_pdfcrop)
-# knit_hooks$set(par=function(before, options, envir){
-# if (before && options$fig.show!='none') {
-# par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
-# mgp=c(2,.7,0),tcl=-.01, las=1)
-# }}, crop=hook_pdfcrop)
-
-if(!file.exists("graphics")) dir.create("graphics")
-@
-\usepackage{amsmath}
+\usepackage{amsmath, booktabs}
 % Set up the images/graphics package
 \usepackage{graphicx}
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 %\graphicspath{{vignettes/graphics/}}
-\title{Predictive Analytics: solutions 1}
+\title{Predictive Analytics: practical 1solutions}
 \date{} % if the \date{} command is left out, the current date will be used
 % The following package makes prettier tables. We're all about the bling!
 \usepackage{booktabs}
@@ -58,160 +25,360 @@ if(!file.exists("graphics")) dir.create("graphics")
 \graphicspath{{../graphics/}}
 \setcounter{secnumdepth}{2}
 \usepackage{microtype}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
+
+
 \maketitle% this prints the handout title, author, and date
 
-Before proceeding with questions, load in the data and necessary packages
-<<>>=
-data(FuelEconomy, package = "AppliedPredictiveModeling")
-library(caret)
-library(nclRpredictive)
-@
+\section*{Course R package}
 
+Installing the course R package\sidenote{A package is an \textit{add-on} or a \textit{module}. It provides additional functions and data.}
+is straightforward. First install \cc{drat}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{install.packages}\hlstd{(}\hlstr{"drat"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\noindent Then
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{drat}\hlopt{::}\hlkwd{addRepo}\hlstd{(}\hlstr{"rcourses"}\hlstd{)}
+\hlkwd{install.packages}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{,} \hlkwc{type}\hlstd{=}\hlstr{"source"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\noindent This R package contains copies of the practicals, solutions and data sets that we require. It will also
+automatically install any packages that we use during the course. To load the package, use
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\noindent During this practical we will the \cc{caret} package
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(}\hlstr{"caret"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\section*{The cars2010 data set}
+
+The \cc{cars2010} data set contains information about car models in $2010$. The aim is to model the \cc{FE} variable which is a fuel economy measure based on $13$ predictors.\sidenote{Further information can be found in the help page, \cc{help(cars2010)}.}
+
+The data is part of the \cc{AppliedPredictiveModeling} package and can be loaded by,
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(FuelEconomy,} \hlkwc{package} \hlstd{=} \hlstr{"AppliedPredictiveModeling"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
+\section*{Exploring the data}
+
+\noindent There are a lot of questions to be considered below marked out by bullet points in the document. Don't worry if you can't finish them all, I intended for there to be enough such that if anyone wants to continue trying things at home they can.
 
 \begin{itemize}
-  \item Prior to any analysis we should get an idea of the relationships between variables in the data.
-<<eval = FALSE>>=
-#set up the graphics device
-op = par(mfrow = c(4,4), mar = c(4,2.5,0.5,0.5))
-plot(FE~., data = cars2010)
-par(op)
+  \item Prior to any analysis we should get an idea of the relationships between variables in the data.\marginnote{The \cc{FE $\sim$ .} notation is shorthand for \cc{FE} against all variables in the data frame specified by the \cc{data} argument.} Use the \cc{pairs} function to explore the data. The first few are shown in figure~\ref{fig:fig1_1}.
 
-@
-\item Create a simple linear model fit of \cc{FE} against \cc{EngDispl} using the \cc{train} function.
-<<>>=
-m1 = train(FE~EngDispl, method = "lm", data = cars2010)
-@
-\item Examine the residuals of this fitted model, plotting residuals against fitted values
-<<fig.width = 6, fig.height = 6>>=
-# extract standardised residuals
-m1resid = rstandard(m1$finalModel)
-# plot of residuals against fitted values
-plot(fitted.values(m1), m1resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-@
-\item What do the residuals tell us about the model fit using this plot? -- There definitely appears to be some trend in the residuals. The curved shape indicates that we potentially require some transformation of variables. A square term might help.
-\item Plot the fitted values vs the observed values
-<<fig.width = 6, fig.height = 6>>=
-plot(cars2010$FE, fitted.values(m1$finalModel),
-     xlim = range(cars2010$FE), ylim = range(cars2010$FE))
-abline(0,1)
-@
-\item What does this plot tell us about the predictive performance of this model across the range of the response? -- We seem to slightly over estimate more often than not in the 25-35 range. For the upper end of the range we seem to always under estimate the true values.
-\item Produce other diagnostic plots of this fitted model -- other diagnostic plots to consider are qq plots of the residuals, residuals against fitted values
-<<fig.width = 7, fig.height = 4>>=
-op = par(mfrow = c(1,2))
-qqnorm(m1resid)
-qqline(m1resid)
-plot(cars2010$EngDispl, m1resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-par(op)
-@
-
-\item Are the modelling assumptions justified? -- We are struggling to justify the assumption of normality in the residuals here, all of the diagnostics indicate patterns remain in the residuals that are currently unexplained by the model.
-
-\item Do you think adding a quadratic term will improve the model fit? -- It seems likely, both the residuals against fitted values and the residuals against the predictor indicate a parabola shape in the residuals suggesting that a quadratic term may improve model fit.
-
-\item Fit a model with the linear and quadratic terms for \cc{EngDispl} and call it \cc{m2}
-<<>>=
-m2 = train(FE~poly(EngDispl,2), method = "lm", data = cars2010)
-@
-
-\item Assess the modelling assumptions for this new model -- We could create the same set of diagnostics
-<<>>=
-m2resid = rstandard(m2$finalModel)
-
-op = par(mfrow = c(2,2))
-# plot of residuals against fitted values
-plot(fitted.values(m2), m2resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-#fitted vs observed
-plot(cars2010$FE, fitted.values(m2$finalModel),
-     xlim = range(cars2010$FE), ylim = range(cars2010$FE))
-abline(0,1)
-# qq
-qqnorm(m2resid)
-qqline(m2resid)
-# resid vs predictor
-plot(cars2010$EngDispl, m2resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-par(op)
-@
-
-\item  How do the two models compare? -- The residual diagnostics indicate a better fit now that the quadratic term has been included. We could also look at the predicted line through the points
-<<fig.width = 7, fig.height = 4>>=
-xs = data.frame(EngDispl = sort(cars2010$EngDispl))
-op = par(mfrow = c(1,2))
-plot(cars2010$EngDispl, cars2010$FE, col = "grey")
-lines(xs$EngDispl,predict(m1,xs),col = 2)
-plot(cars2010$EngDispl, cars2010$FE, col = "grey")
-lines(xs$EngDispl,predict(m2,xs),col = 2)
-par(op)
-@
-
-\item How does transforming the response variable affect the fit? -- We can look at a log transform
-<<>>=
-m3 = train(log(FE)~poly(EngDispl,2), data = cars2010, method = "lm")
-m3resid = rstandard(m3$finalModel)
-op = par(mfrow = c(2,2))
-# plot of residuals against fitted values
-plot(fitted.values(m3), m3resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-#fitted vs observed
-plot(log(cars2010$FE), fitted.values(m3$finalModel),
-     xlim = range(log(cars2010$FE)), ylim = range(log(cars2010$FE)))
-abline(0,1)
-# qq
-qqnorm(m3resid)
-qqline(m3resid)
-# resid vs predictor
-plot(cars2010$EngDispl, m3resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-par(op)
-@
-Perhaps the residuals more closely match the assumption of normality under this transformation. However we need to be careful about interpretation now as the response is on the log scale. Likewise for prediction we need to remember to undo the transformation.
-
-\item  Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}
-<<>>=
-m5 = train(FE~EngDispl + NumCyl, data = cars2010, method = "lm")
-@
-\item Examine model fit and compare to the original. 
-<<>>=
-m5resid = rstandard(m5$finalModel)
-op = par(mfrow = c(2,3))
-# plot of residuals against fitted values
-plot(fitted.values(m5), m5resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-#fitted vs observed
-plot(cars2010$FE, fitted.values(m5$finalModel),
-     xlim = range(cars2010$FE), ylim = range(cars2010$FE))
-abline(0,1)
-# qq
-qqnorm(m5resid)
-qqline(m5resid)
-# resid vs predictor
-plot(cars2010$EngDispl, m5resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-# resid vs predictor
-plot(cars2010$NumCyl, m5resid)
-abline(h = c(-2,0,2), col=  c(2,3,2), lty= c(2,1,2))
-par(op)
-@
-Fit doesn't appear much improved from these plots, perhaps we still need to reintroduce the quadratic term for EngDispl, and consider whether we need to transform NumCyl or the response after that.
-
-\item Does the model improve with the addition of an extra variable? -- Not without the addition of extra terms.
-
-\item If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
-<<>>=
-m6 = train(FE~EngDispl*NumCyl, method = "lm", data = cars2010)
-op = par(mfrow = c(1,2))
-plot3d(m5,cars2010$EngDispl, cars2010$NumCyl,cars2010$FE)
-plot3d(m6,cars2010$EngDispl, cars2010$NumCyl,cars2010$FE)
-par(op)
-@
-The rate of change of fuel economy with respect to the number of cylinders depends on the EngDispl when the interaction is included.
-
+An alternative to using \cc{pairs} is to specify a plot device that has enough
+space for the number of plots required to plot the response against
+each predictor. We don't get all the pairwise information amongst predictors but it saves a lot of space on the plot and makes it easier to see what's going on. Its also a good idea to make smaller margins. 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{op} \hlkwb{=} \hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{5}\hlstd{),} \hlkwc{mar} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{2}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{1.5}\hlstd{))}
+\hlkwd{plot}\hlstd{(FE} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= cars2010)}
+\hlkwd{par}\hlstd{(op)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
 \end{itemize}
 
+\begin{figure}[t]
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-8-1} 
+
+\end{knitrout}
+  \caption{Plotting the response against some of the predictor variables in the \cc{cars2010} data set.}
+  \label{fig:fig1_1}
+\end{figure}
+
+
+\begin{itemize}
+  \item Create a simple linear model fit of \cc{FE} against \cc{EngDispl} using the \cc{train} function.\sidenote{Remember, to specify a particular model type we use the \cc{method} argument.}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{m1} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\item Examine the residuals of this fitted model, plotting residuals against fitted values
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{rstd} \hlkwb{=} \hlkwd{rstandard}\hlstd{(m1}\hlopt{$}\hlstd{finalModel)}
+\hlkwd{plot}\hlstd{(}\hlkwd{fitted.values}\hlstd{(m1}\hlopt{$}\hlstd{finalModel), rstd)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\noindent We can add the lines showing where we expect the residuals to fall to aid graphical inspection
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{abline}\hlstd{(}\hlkwc{h} \hlstd{=} \hlkwd{c}\hlstd{(}\hlopt{-}\hlnum{2}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{2}\hlstd{),} \hlkwc{col} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{3}\hlstd{,} \hlnum{2}\hlstd{),} \hlkwc{lty} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\item What do the residuals tell us about the model fit using this plot? 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# There definitely appears to be some trend in the}
+\hlcom{# residuals.  The curved shape indicates that we}
+\hlcom{# potentially require some transformation of variables.}
+\hlcom{# A square term might help.}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\item Plot the fitted values vs the observed values
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(cars2010}\hlopt{$}\hlstd{FE,} \hlkwd{fitted.values}\hlstd{(m1}\hlopt{$}\hlstd{finalModel))}
+\hlkwd{abline}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\begin{itemize}
+  \item What does this plot tell us about the predictive performance of this model across the range of the response?
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# We seem to slightly over estimate more often than not}
+\hlcom{# in the 25-35 range.  For the upper end of the range we}
+\hlcom{# seem to always under estimate the true values.}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+  \item Produce other diagnostic plots of this fitted model
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{qqnorm}\hlstd{(rstd);} \hlkwd{qqline}\hlstd{(rstd)}
+\hlkwd{plot}\hlstd{(cars2010}\hlopt{$}\hlstd{EngDispl, rstd)}
+\hlkwd{abline}\hlstd{(}\hlkwc{h} \hlstd{=} \hlkwd{c}\hlstd{(}\hlopt{-}\hlnum{2}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{2}\hlstd{),} \hlkwc{col}\hlstd{=}  \hlnum{2}\hlopt{:}\hlnum{3}\hlstd{,} \hlkwc{lty}\hlstd{=} \hlnum{1}\hlopt{:}\hlnum{2}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+  \item Are the modelling assumptions justified?
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## We are struggling to justify the assumption of}
+\hlcom{## normality in the residuals here, all of the diagnostics}
+\hlcom{## indicate patterns remain in the residuals that are}
+\hlcom{## currently unexplained by the model.}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\end{itemize}
+\end{itemize}
+
+
+\section*{Extending the model}
+
+
+\begin{itemize}
+  \item Do you think adding a quadratic term will improve the model fit?
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# We are struggling to justify the assumption of}
+\hlcom{# normality in the residuals here, all of the diagnostics}
+\hlcom{# indicate patterns remain in the residuals that are}
+\hlcom{# currently unexplained by the model}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+  \item Fit a model with the linear and quadratic terms for \cc{EngDispl} and call it \cc{m2}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{m2} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlkwd{poly}\hlstd{(EngDispl,}\hlnum{2}\hlstd{,}\hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{),} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{itemize}
+  \item Assess the modelling assumptions for this new model
+  \item How do the two models compare?
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# The residual diagnostics indicate a better fit now that}
+\hlcom{# the quadratic term has been included.}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\end{itemize}
+  \item How does transforming the response variable affect the fit?\marginnote{Common transformations may be a log or square root function.}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# Perhaps the residuals more closely match the assumption}
+\hlcom{# of normality under this transformation. However we need}
+\hlcom{# to be careful about interpretation now as the response}
+\hlcom{# is on the log scale. Likewise for prediction we need to}
+\hlcom{# remember to undo the transformation.}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+  \item Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{m5} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl,} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+  \item Examine model fit and compare to the original. 
+  \item Does the model improve with the addition of an extra variable?
+\end{itemize}
+
+% Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}. Examine model fit and compare to the original. Does the model improve with the addition of an extra variable?
+
+
+\section*{Visualising the model}
+
+The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with viewing these surfaces in 3D as in figure~\ref{fig:fesurface}.\sidenote{We can also add the observed points to the plot using the \cc{points} argument to this function, see the help page for further information.}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot3d}\hlstd{(m5,cars2010}\hlopt{$}\hlstd{EngDispl, cars2010}\hlopt{$}\hlstd{NumCyl, cars2010}\hlopt{$}\hlstd{FE)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{marginfigure}
+  \includegraphics[]{graphics/fesurface-crop}
+  \caption{A surface plot from a linear model of fuel economy against the number of cylinders and engine displacement including the interaction term.}
+  \label{fig:fesurface}
+\end{marginfigure}
+
+
+\begin{itemize}
+  \item Try fitting other variations of this model using these two predictors, how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface.
+  \item If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
+\end{itemize}
+
+% Try fitting other variations of this model using these two predictors, how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface. If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
+
+\noindent One way to guage how well your model is performing is to hold out a set of observations from the training data. Then examine how well your model extends to the data that wasn't used for training. We will see more of this in coming chapters of the notes.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# set up a set of indicies that will be included }
+\hlcom{# in the training data}
+\hlstd{trainIndex} \hlkwb{=} \hlkwd{sample}\hlstd{(}\hlkwd{nrow}\hlstd{(cars2010),} \hlnum{900}\hlstd{)}
+\hlcom{# create two data frames, a training and a test set}
+\hlcom{# by taking subsets using this set of indicies}
+\hlcom{# here we use 900 observations to train the model}
+\hlcom{# and the rest for testing}
+\hlstd{carstrain} \hlkwb{=} \hlstd{cars2010[trainIndex,]}
+\hlstd{carstest} \hlkwb{=} \hlstd{cars2010[}\hlopt{-}\hlstd{trainIndex,]}
+\hlcom{# train the model and predict}
+\hlstd{mtrain} \hlkwb{=} \hlkwd{train}\hlstd{(FE}\hlopt{~}\hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl,} \hlkwc{data} \hlstd{= carstrain,}
+               \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
+\hlstd{prediction} \hlkwb{=} \hlkwd{predict}\hlstd{(mtrain, carstest)}
+
+\hlcom{# residuals of the test set}
+\hlstd{res} \hlkwb{=} \hlstd{prediction} \hlopt{-} \hlstd{carstest}\hlopt{$}\hlstd{FE}
+\hlcom{# calculate RMSE}
+\hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res}\hlopt{*}\hlstd{res))}
+\end{alltt}
+\begin{verbatim}
+## [1] 5.24
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\noindent Having a small value here indicates that my model does a good job of predicting for observations that weren't used to train the model.
+
+\section*{In the spirit of competition \ldots}
+
+Try to fit the best model that you can using the \cc{cars2010} data set and the above tools. 
+I have a set of data that you haven't yet seen. Once you are happy with your model you can validate it using the \cc{validate} function in the \cc{nclRpredictive} package.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{m1validated} \hlkwb{=} \hlkwd{validate}\hlstd{(}\hlkwc{model} \hlstd{= m1)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\section*{Other data sets}
+
+A couple of other data sets that can be used to try fitting linear regression models.
+\begin{table}[!h]
+  \centering
+  \begin{tabular}{@{} lll @{}}
+  \toprule
+  data set & Package & Response \\
+  \midrule
+  diamonds & ggplot2 & price \\
+  Wage & ISLR & wage \\
+  BostonHousing & mlbench & medv \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
 \end{document}
+
+
+
+%' \noindent We could create a 3D plot to investigate what the fitted model looks like against both independent variables simultaneously.
+%' <<echo = FALSE>>=
+%' m5 = train(FE~EngDispl + NumCyl + EngDispl:NumCyl, data = cars2010, method = "lm")
+%' @
+%' 
+%' <<eval = FALSE>>=
+%' newdata = expand.grid(
+%'   EngDispl = seq(
+%'       min(cars2010$EngDispl), 
+%'       max(cars2010$EngDispl),
+%'       length.out = 100),
+%'   NumCyl = seq(
+%'       min(cars2010$NumCyl), 
+%'       max(cars2010$NumCyl),
+%'       length.out = 100))
+%' preddata = predict(m5, newdata)
+%' persp( unique(newdata$EngDispl), 
+%'       unique(newdata$NumCyl), 
+%'       matrix(preddata,nrow = 100), 
+%'       phi = 30, theta = 30)
+%' @
+%' \noindent The \cc{phi} and \cc{theta} arguments specify the rotation of the plot in degrees. You can play around with these values until the plot is clear, I find a value of $30$ for each often works well. It should be clear to see that as both engine displacement and number of cylinders increase the fitted surface predicts a lower fuel economy.

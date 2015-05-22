@@ -1,16 +1,37 @@
 %\VignetteIndexEntry{practical1}
 %\VignetteEngine{Sweave}
 
+<<echo=FALSE>>=
+results='hide';echo=FALSE
+@
+
+\documentclass[a4paper,justified,openany]{tufte-handout}
+<<setup, echo=FALSE, cache=FALSE>>=
+library(knitr)
+opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+              cache = TRUE, size = "small", message = FALSE,
+              fig.path='knitr_figure/graphics-', 
+               cache.path='knitr_cache/graphics-', 
+               fig.align='center', 
+               dev='pdf', fig.width=5, fig.height=5)
+
+knit_hooks$set(par=function(before, options, envir){
+    if (before && options$fig.show!='none') {
+        par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+            mgp=c(2,.7,0),tcl=-.01, las=1)
+}}, crop=hook_pdfcrop)
 
 
-\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage{knitr}
-
+opts_knit$set(out.format = "latex")
+options(width=56)
+dir.create("graphics",showWarnings = FALSE)
+@
 \usepackage{amsmath, booktabs}
 % Set up the images/graphics package
 \usepackage{graphicx}
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 %\graphicspath{{vignettes/graphics/}}
-\title{Predictive Analytics: practical 1}
+\title{Predictive Analytics: practical 1\Sexpr{ifelse(echo, "solutions", "")}}
 \date{} % if the \date{} command is left out, the current date will be used
 % The following package makes prettier tables. We're all about the bling!
 \usepackage{booktabs}
@@ -25,7 +46,6 @@
 \graphicspath{{../graphics/}}
 \setcounter{secnumdepth}{2}
 \usepackage{microtype}
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
 
@@ -35,52 +55,32 @@
 
 Installing the course R package\sidenote{A package is an \textit{add-on} or a \textit{module}. It provides additional functions and data.}
 is straightforward. First install \cc{drat}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{install.packages}\hlstd{(}\hlstr{"drat"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<eval=FALSE, tidy=FALSE>>=
+install.packages("drat")
+@
 \noindent Then
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{drat}\hlopt{::}\hlkwd{addRepo}\hlstd{(}\hlstr{"rcourses"}\hlstd{)}
-\hlkwd{install.packages}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{,} \hlkwc{type}\hlstd{=}\hlstr{"source"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<eval=FALSE, tidy=FALSE>>=
+drat::addRepo("rcourses")
+install.packages("nclRpredictive", type="source")
+@
 \noindent This R package contains copies of the practicals, solutions and data sets that we require. It will also
 automatically install any packages that we use during the course. To load the package, use
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<>>=
+library("nclRpredictive")
+@
 \noindent During this practical we will the \cc{caret} package
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(}\hlstr{"caret"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<eval = TRUE, message=FALSE>>=
+library("caret")
+@
 
 \section*{The cars2010 data set}
 
 The \cc{cars2010} data set contains information about car models in $2010$. The aim is to model the \cc{FE} variable which is a fuel economy measure based on $13$ predictors.\sidenote{Further information can be found in the help page, \cc{help(cars2010)}.}
 
 The data is part of the \cc{AppliedPredictiveModeling} package and can be loaded by,
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(FuelEconomy,} \hlkwc{package} \hlstd{=} \hlstr{"AppliedPredictiveModeling"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<>>=
+data(FuelEconomy, package = "AppliedPredictiveModeling")
+@
 
 
 
@@ -94,24 +94,21 @@ The data is part of the \cc{AppliedPredictiveModeling} package and can be loaded
 An alternative to using \cc{pairs} is to specify a plot device that has enough
 space for the number of plots required to plot the response against
 each predictor. We don't get all the pairwise information amongst predictors but it saves a lot of space on the plot and makes it easier to see what's going on. Its also a good idea to make smaller margins. 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{op} \hlkwb{=} \hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{5}\hlstd{),} \hlkwc{mar} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{2}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{1.5}\hlstd{))}
-\hlkwd{plot}\hlstd{(FE} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= cars2010)}
-\hlkwd{par}\hlstd{(op)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<eval = FALSE>>=
+op = par(mfrow = c(3, 5), mar = c(4, 2, 1, 1.5))
+plot(FE ~ ., data = cars2010)
+par(op)
+@
 
 \end{itemize}
 
 \begin{figure}[t]
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=\maxwidth]{figure/unnamed-chunk-8-1} 
-
-\end{knitrout}
+<<echo=FALSE, fig.width=9, fig.height=4.5>>=
+setnicepar(mfrow = c(1,2))
+mypalette(1)
+plot(FE ~ EngDispl + NumCyl, data = cars2010, pch=21, bg=1, 
+     ylim=c(0, 75), cex=0.7)
+@  
   \caption{Plotting the response against some of the predictor variables in the \cc{cars2010} data set.}
   \label{fig:fig1_1}
 \end{figure}
@@ -120,33 +117,50 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \begin{itemize}
   \item Create a simple linear model fit of \cc{FE} against \cc{EngDispl} using the \cc{train} function.\sidenote{Remember, to specify a particular model type we use the \cc{method} argument.}
 
-
+<<echo = echo>>=
+m1 = train(FE ~ EngDispl, method = "lm", data = cars2010)
+@
 
 
 \item Examine the residuals of this fitted model, plotting residuals against fitted values
-
+<<echo=echo, fig.keep="none">>=
+rstd = rstandard(m1$finalModel)
+plot(fitted.values(m1$finalModel), rstd)
+@
 
 \noindent We can add the lines showing where we expect the residuals to fall to aid graphical inspection
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{abline}\hlstd{(}\hlkwc{h} \hlstd{=} \hlkwd{c}\hlstd{(}\hlopt{-}\hlnum{2}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{2}\hlstd{),} \hlkwc{col} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{3}\hlstd{,} \hlnum{2}\hlstd{),} \hlkwc{lty} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<eval = FALSE, tidy=TRUE>>=
+abline(h = c(-2,0,2), col = c(2,3,2), lty = c(2,1,2))
+@
 
 \item What do the residuals tell us about the model fit using this plot? 
-
+<<echo=echo, tidy=TRUE>>=
+# There definitely appears to be some trend in the residuals. 
+#The curved shape indicates that we potentially require some transformation of variables. 
+#A square term might help.  
+@
 
 \item Plot the fitted values vs the observed values
-
+<<echo=echo, fig.keep="none">>=
+plot(cars2010$FE, fitted.values(m1$finalModel))
+abline(0,1)
+@
 \begin{itemize}
   \item What does this plot tell us about the predictive performance of this model across the range of the response?
-
+<<echo=echo, tidy=TRUE>>=  
+#We seem to slightly over estimate more often than not in the 25-35 range. 
+#For the upper end of the range we seem to always under estimate the true values.  
+@
   \item Produce other diagnostic plots of this fitted model
-
+<<echo=echo,fig.keep="none">>=
+qqnorm(rstd); qqline(rstd)
+plot(cars2010$EngDispl, rstd)
+abline(h = c(-2,0,2), col=  2:3, lty= 1:2)
+@
   \item Are the modelling assumptions justified?
-
+<<echo=echo, tidy=TRUE>>=  
+## We are struggling to justify the assumption of normality in the residuals here, all of the diagnostics indicate patterns remain in the residuals that are currently unexplained by the model.
+@
 \end{itemize}
 \end{itemize}
 
@@ -156,21 +170,33 @@ each predictor. We don't get all the pairwise information amongst predictors but
 
 \begin{itemize}
   \item Do you think adding a quadratic term will improve the model fit?
-
+<<echo=echo, tidy=TRUE>>=
+# We are struggling to justify the assumption of normality in the residuals here, 
+# all of the diagnostics indicate patterns remain in the residuals that are currently unexplained by the model
+@
 
   \item Fit a model with the linear and quadratic terms for \cc{EngDispl} and call it \cc{m2}
 
-
+<<echo = echo>>=
+m2 = train(FE ~ poly(EngDispl,2,raw = TRUE), data = cars2010, 
+    method = "lm")
+@
 
 \begin{itemize}
   \item Assess the modelling assumptions for this new model
   \item How do the two models compare?
-
+<<echo=echo, tidy=TRUE>>=
+# The residual diagnostics indicate a better fit now that the quadratic term has been included.
+@
 \end{itemize}
   \item How does transforming the response variable affect the fit?\marginnote{Common transformations may be a log or square root function.}
-
+<<echo=echo, tidy=TRUE>>=
+#Perhaps the residuals more closely match the assumption of normality under this transformation. However we need to be careful about interpretation now as the response is on the log scale. Likewise for prediction we need to remember to undo the transformation.
+@
   \item Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}
-
+<<echo=echo, tidy=TRUE>>=
+m5 = train(FE~EngDispl + NumCyl, data = cars2010, method = "lm")
+@
   \item Examine model fit and compare to the original. 
   \item Does the model improve with the addition of an extra variable?
 \end{itemize}
@@ -181,14 +207,15 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \section*{Visualising the model}
 
 The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with viewing these surfaces in 3D as in figure~\ref{fig:fesurface}.\sidenote{We can also add the observed points to the plot using the \cc{points} argument to this function, see the help page for further information.}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot3d}\hlstd{(m5,cars2010}\hlopt{$}\hlstd{EngDispl, cars2010}\hlopt{$}\hlstd{NumCyl, cars2010}\hlopt{$}\hlstd{FE)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
+<<eval = FALSE>>=
+plot3d(m5,cars2010$EngDispl, cars2010$NumCyl, cars2010$FE)
+@
+<<echo = FALSE>>=
+pdf("graphics/fesurface.pdf", width = 4, height = 4)
+plot3d(m5,cars2010$EngDispl, cars2010$NumCyl, cars2010$FE)
+sink = dev.off()
+system("pdfcrop graphics/fesurface.pdf")
+@
 \begin{marginfigure}
   \includegraphics[]{graphics/fesurface-crop}
   \caption{A surface plot from a linear model of fuel economy against the number of cylinders and engine displacement including the interaction term.}
@@ -204,33 +231,26 @@ The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with vie
 % Try fitting other variations of this model using these two predictors, how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface. If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
 
 \noindent One way to guage how well your model is performing is to hold out a set of observations from the training data. Then examine how well your model extends to the data that wasn't used for training. We will see more of this in coming chapters of the notes.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# set up a set of indicies that will be included }
-\hlcom{# in the training data}
-\hlstd{trainIndex} \hlkwb{=} \hlkwd{sample}\hlstd{(}\hlkwd{nrow}\hlstd{(cars2010),} \hlnum{900}\hlstd{)}
-\hlcom{# create two data frames, a training and a test set}
-\hlcom{# by taking subsets using this set of indicies}
-\hlcom{# here we use 900 observations to train the model}
-\hlcom{# and the rest for testing}
-\hlstd{carstrain} \hlkwb{=} \hlstd{cars2010[trainIndex,]}
-\hlstd{carstest} \hlkwb{=} \hlstd{cars2010[}\hlopt{-}\hlstd{trainIndex,]}
-\hlcom{# train the model and predict}
-\hlstd{mtrain} \hlkwb{=} \hlkwd{train}\hlstd{(FE}\hlopt{~}\hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl,} \hlkwc{data} \hlstd{= carstrain,}
-               \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
-\hlstd{prediction} \hlkwb{=} \hlkwd{predict}\hlstd{(mtrain, carstest)}
+<<>>=
+# set up a set of indicies that will be included 
+# in the training data
+trainIndex = sample(nrow(cars2010), 900)
+# create two data frames, a training and a test set
+# by taking subsets using this set of indicies
+# here we use 900 observations to train the model
+# and the rest for testing
+carstrain = cars2010[trainIndex,]
+carstest = cars2010[-trainIndex,]
+# train the model and predict
+mtrain = train(FE~EngDispl + NumCyl, data = carstrain, 
+               method = "lm")
+prediction = predict(mtrain, carstest)
 
-\hlcom{# residuals of the test set}
-\hlstd{res} \hlkwb{=} \hlstd{prediction} \hlopt{-} \hlstd{carstest}\hlopt{$}\hlstd{FE}
-\hlcom{# calculate RMSE}
-\hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res}\hlopt{*}\hlstd{res))}
-\end{alltt}
-\begin{verbatim}
-## [1] 4.681
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+# residuals of the test set
+res = prediction - carstest$FE
+# calculate RMSE
+sqrt(mean(res*res))
+@
 
 \noindent Having a small value here indicates that my model does a good job of predicting for observations that weren't used to train the model.
 
@@ -239,13 +259,9 @@ The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with vie
 Try to fit the best model that you can using the \cc{cars2010} data set and the above tools. 
 I have a set of data that you haven't yet seen. Once you are happy with your model you can validate it using the \cc{validate} function in the \cc{nclRpredictive} package.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{m1validated} \hlkwb{=} \hlkwd{validate}\hlstd{(}\hlkwc{model} \hlstd{= m1)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<eval = FALSE>>=
+m1validated = validate(model = m1)
+@
 
 \section*{Other data sets}
 

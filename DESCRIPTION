@@ -1,19 +1,20 @@
 Package: nclRpredictive
 Type: Package
 Title: Predictive analytics package
-Version: 1.0
-Date: 2015-05-11
-Authors@R: person("Jamie", "Owen", email="j.r.owen@ncl.ac.uk", role =
-  c("aut", "cre"))
+Version: 1.0.3
+Date: 2015-05-22
+Authors@R: c(
+  person("Jamie", "Owen", email="jamie.owen@ncl.ac.uk", role =c("aut", "cre")),
+  person("Colin", "Gillespie", email="csgillespie@gmail.com", role =c("aut")))
 Description: A package for the predictive analytics course.
 License: GPL-3 | GPL-2
-VignetteBuilder: knitr
 Depends: R (>= 3.1.0)
-Suggests:
-  knitr,
-  caret,
-  ISLR,
-  doMC,
-  pROC,
-  AppliedPredictiveModeling
+URL: https://github.com/rcourses
+Imports: caret, 
+  AppliedPredictiveModeling, 
+  ISLR, pROC, splines,
+  partykit, mlbench, gridExtra,
+  elasticnet, pls, lars,
+  gam, ipred, randomForest, gbm,
+  kernlab, e1071
 LazyData: true

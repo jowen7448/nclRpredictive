@@ -6,7 +6,12 @@
 validate = function(model = NULL){
   if(is.null(model)) stop("No model provided")
   if(!(inherits(model,"train"))) stop("The model is not an object returned by train")
-  data(FuelEconomy, package = "AppliedPredictiveModeling")
+  
+  ## Don't mess up global environment
+  env = new.env()
+  data(FuelEconomy, package = "AppliedPredictiveModeling", envir = env)
+  cars2011 = env$cars2011
+  
   test = tryCatch(predict(model, cars2011[1,]), error = function(e) e)
   if(inherits(test, "error")) stop("Your model can not successfully predict the test evaluation")
   message("Success, mark your model using the mark function")

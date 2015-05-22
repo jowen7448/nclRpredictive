@@ -1,14 +1,32 @@
 %\VignetteIndexEntry{practical2}
 %\VignetteEngine{Sweave}
 
+<<echo=FALSE>>=
+results='hide';echo=FALSE
+@
+\documentclass[a4paper,justified,openany]{tufte-handout}
+<<setup, echo=FALSE, cache=FALSE>>=
+dir.create("graphics", showWarnings = FALSE)
+library("knitr")
+opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+              cache = TRUE, size = "small", message = FALSE,
+              fig.path='knitr_figure/graphics-', 
+               cache.path='knitr_cache/graphics-', 
+               fig.align='center', 
+               dev='pdf', fig.width=5, fig.height=5)
 
-\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage{knitr}
-
+knit_hooks$set(par=function(before, options, envir){
+    if (before && options$fig.show!='none') {
+        par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
+            mgp=c(2,.7,0),tcl=-.01, las=1)
+}}, crop=hook_pdfcrop)
+opts_knit$set(out.format = "latex")
+@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 \graphicspath{{graphics/}}
-\title{Predictive Analytics: practical 2}
+\title{Predictive Analytics: practical 2\Sexpr{ifelse(echo, "solutions", "")}}
 \date{} % if the \date{} command is left out, the current date will be used
 
 \usepackage{booktabs}
@@ -19,88 +37,102 @@
 \graphicspath{{../graphics/}}
 \setcounter{secnumdepth}{2}
 \usepackage{microtype}
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
 \begin{document}
 \maketitle% this prints the handout title, author, and date
 
 \section*{The \cc{OJ} data set}
 
 The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of two brands of orange juice customers purchased and can be loaded in using
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(OJ,} \hlkwc{package} \hlstd{=} \hlstr{"ISLR"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<>>=
+data(OJ, package = "ISLR")
+@
 
 \noindent After loading the \cc{caret} package 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(}\hlstr{"caret"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<message = FALSE>>=
+library("caret")
+@
 
 \noindent Make an initial examination of the relationships between each of the predictors and the response\sidenote{Use the \cc{plot} function with a model formula or the \cc{pairs} function.}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,}\hlnum{5}\hlstd{),} \hlkwc{mar}\hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,}\hlnum{.5}\hlstd{,}\hlnum{.5}\hlstd{,}\hlnum{.5}\hlstd{))}
-\hlkwd{plot}\hlstd{(Purchase}\hlopt{~}\hlstd{.,} \hlkwc{data} \hlstd{= OJ)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<eval = echo, fig.keep="none">>=
+par(mfrow = c(4,5), mar= c(4,.5,.5,.5))
+plot(Purchase~., data = OJ)
+@ 
 
 \section*{Initial model building}
 
 \begin{itemize}
 \item To begin, create a logistic regression model that takes into consideration the prices of the two brands of orange juice, \cc{PriceCH} and \cc{PriceMM}.\sidenote{Hint: The train function does model fitting, the method argument specifies the type of model. \cc{method = ``glm''} is used for logistic regression.}
-
+<<echo=echo, cache=TRUE>>=
+m1 = train(Purchase ~ PriceCH + PriceMM,
+    data = OJ, method = "glm")
+@
   \item What proportion of purchases does this model get right?
-
+<<echo=echo, results=results>>=
+mean(predict(m1) != OJ$Purchase)
+@   
   \item How does this compare to if we used no model?
-
+<<echo=echo, cache=TRUE, results=results>>=
+# with no model we essentially predict according to 
+# proportion of observations in data
+probs = table(OJ$Purchase)/nrow(OJ)
+preds = sample(levels(OJ$Purchase), prob = probs)
+mean(preds != OJ$Purchase)
+@ 
 \end{itemize}
 
 \noindent The following code produces a plot of the decision boundary as seen in figure~\ref{fig:purchaseboundary}.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{## Set up a grid for prediction}
-\hlstd{chrange} \hlkwb{=} \hlkwd{range}\hlstd{(OJ}\hlopt{$}\hlstd{PriceCH)}
-\hlstd{mmrange} \hlkwb{=} \hlkwd{range}\hlstd{(OJ}\hlopt{$}\hlstd{PriceMM)}
-\hlstd{chseq} \hlkwb{=} \hlkwd{seq}\hlstd{(chrange[}\hlnum{1}\hlstd{],chrange[}\hlnum{2}\hlstd{],}\hlkwc{length.out} \hlstd{=} \hlnum{100}\hlstd{)}
-\hlstd{mmseq} \hlkwb{=} \hlkwd{seq}\hlstd{(mmrange[}\hlnum{1}\hlstd{],mmrange[}\hlnum{2}\hlstd{],}\hlkwc{length.out} \hlstd{=} \hlnum{100}\hlstd{)}
-\hlstd{grid} \hlkwb{=} \hlkwd{expand.grid}\hlstd{(}\hlstr{"PriceCH"} \hlstd{= chseq,} \hlstr{"PriceMM"} \hlstd{= mmseq)}
+<<eval = TRUE, fig.keep="none">>=
+## Set up a grid for prediction
+chrange = range(OJ$PriceCH)
+mmrange = range(OJ$PriceMM)
+chseq = seq(chrange[1],chrange[2],length.out = 100)
+mmseq = seq(mmrange[1],mmrange[2],length.out = 100)
+grid = expand.grid("PriceCH" = chseq, "PriceMM" = mmseq)
 
-\hlcom{# make the predictions}
-\hlstd{predictions} \hlkwb{=} \hlkwd{predict}\hlstd{(m1,grid,}\hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)}
-\hlcom{# turn the predictions into a matrix for a contour plot}
-\hlstd{predmat} \hlkwb{=} \hlkwd{matrix}\hlstd{(predictions[,}\hlnum{2}\hlstd{],} \hlkwc{nrow}\hlstd{=}\hlnum{100}\hlstd{)}
-\hlkwd{contour}\hlstd{(chseq, mmseq, predmat,} \hlkwc{levels} \hlstd{=} \hlnum{0.5}\hlstd{,}
-        \hlkwc{xlab} \hlstd{=} \hlstr{"Price CH"}\hlstd{,} \hlkwc{ylab} \hlstd{=} \hlstr{"Price MM"}\hlstd{,}
-        \hlkwc{lwd} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{main} \hlstd{=} \hlstr{"Blue = MM"}\hlstd{)}
+# make the predictions
+predictions = predict(m1,grid,type = "prob")
+# turn the predictions into a matrix for a contour plot
+predmat = matrix(predictions[,2], nrow=100)
+contour(chseq, mmseq, predmat, levels = 0.5,
+        xlab = "Price CH", ylab = "Price MM",
+        lwd = 2, main = "Blue = MM")
 
-\hlcom{# the background points indicating prediction}
-\hlkwd{points}\hlstd{(grid,}\hlkwc{col} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"red"}\hlstd{,}\hlstr{"blue"}\hlstd{)[}\hlkwd{predict}\hlstd{(m1,grid)],}
-       \hlkwc{cex} \hlstd{=} \hlnum{0.2}\hlstd{)}
-\hlcom{# there are few unique combinations of prices, }
-\hlcom{# jitter can help see the points}
-\hlcom{# points of prices coloured by purchased brand}
-\hlkwd{points}\hlstd{(}\hlkwd{jitter}\hlstd{(OJ}\hlopt{$}\hlstd{PriceCH,}\hlkwc{factor} \hlstd{=} \hlnum{2}\hlstd{),}
-       \hlkwd{jitter}\hlstd{(OJ}\hlopt{$}\hlstd{PriceMM,} \hlkwc{factor} \hlstd{=} \hlnum{2}\hlstd{),}
-       \hlkwc{col} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"red"}\hlstd{,}\hlstr{"blue"}\hlstd{)[OJ}\hlopt{$}\hlstd{Purchase],}
-       \hlkwc{pch} \hlstd{=} \hlnum{19}\hlstd{,} \hlkwc{cex}  \hlstd{=}\hlnum{0.6}\hlstd{)}
+# the background points indicating prediction
+points(grid,col = c("red","blue")[predict(m1,grid)], 
+       cex = 0.2)
+# there are few unique combinations of prices, 
+# jitter can help see the points
+# points of prices coloured by purchased brand
+points(jitter(OJ$PriceCH,factor = 2),
+       jitter(OJ$PriceMM, factor = 2),
+       col = c("red","blue")[OJ$Purchase], 
+       pch = 19, cex  =0.6)
 
-\hlcom{# add dashed line of equal price}
-\hlkwd{abline}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{,}\hlkwc{lwd} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{lty} \hlstd{=} \hlnum{2}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+# add dashed line of equal price
+abline(0,1,lwd = 2, lty = 2)
+@
 
-
+<<echo = FALSE>>=
+pdf("graphics/purchaseboundary.pdf", width = 4, height = 4)
+contour(chseq, mmseq, predmat, levels = 0.5,
+        xlab = "Price CH", ylab = "Price MM",
+        lwd = 2, main = "Blue = MM")
+# the background points indicating prediction
+points(grid,col = c("red","blue")[predict(m1,grid)], 
+       cex = 0.2)
+# there are few unique combinations of prices, 
+# jitter can help see the points
+# points of prices coloured by purchased brand
+points(jitter(OJ$PriceCH,factor = 2), 
+       jitter(OJ$PriceMM, factor = 2),
+       col = c("red","blue")[OJ$Purchase], 
+       pch = 19, cex = 0.6)
+# add dashed line of equal price
+abline(0,1,lwd = 2, lty = 2)
+sink = dev.off()
+system("pdfcrop graphics/purchaseboundary.pdf")
+@
 
 \begin{marginfigure}
   \includegraphics[width = \textwidth]{graphics/purchaseboundary-crop}
@@ -112,7 +144,9 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 %% package and use the same trick to allow partipants to load the code}
 \begin{itemize}
   \item What happens if we add an interaction term? How does the boundary change?
-
+<<echo=echo, tidy=TRUE>>=
+#We now have a curved decision boundary. There are two regions of where we would predict MM, bottom left, and a tiny one up in the top right.
+@
 
 \end{itemize}
 
@@ -120,48 +154,41 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 
 \begin{itemize}
   \item Fit a logistic regression model using all of the predictors
-
+<<echo=echo, warning=FALSE>>=
+mLM = train(Purchase ~ ., data = OJ, method = "glm")
+@ 
   \item Is there a problem?
-
+<<echo=echo>>=
+## YES!
+@
 
 \noindent We can view the most recent warning messages by using the \cc{warnings} function
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{warnings}\hlstd{()}
-\end{alltt}
-\begin{verbatim}
-## NULL
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+<<warnings=FALSE,results="none">>=
+warnings()
+@
 
-
+<<warning = FALSE, echo = FALSE, cache=TRUE>>=
+m_log = train(Purchase ~ ., data = OJ, method = "glm")
+@
 
 \noindent This suggests some rank--deficient fit problems,
 
 \item Look at the final model, you should notice that a number of parameters have not been estimated
+<<echo=echo, results=results>>=
+m_log$finalModel
+@
 
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlopt{?}\hlstd{ISLR}\hlopt{::}\hlstd{OJ}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<eval = FALSE>>=
+?ISLR::OJ
+@
 \noindent gives further insight, the \cc{PriceDiff} variable is a linear combination of \cc{SalePriceMM} and \cc{SalePriceCH} so we should remove this. In addition we have a \cc{StoreID} variable and a \cc{STORE} variable are different encodings of the same information so we should remove one of these too. We also have \cc{DiscCH} and \cc{DiscMM} which are the differences between \cc{PriceCH} and \cc{SalePriceCH} and 
 \cc{PriceMM} and \cc{SalePriceMM} respectively and \cc{ListPriceDiff} is a linear combination of these prices. Removing all of these vairables allows the model to be fit and all parameters to be estimated.\sidenote{This is to highlight that we need to understand what we have in our data.}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[}\hlopt{!}\hlstd{(}\hlkwd{colnames}\hlstd{(OJ)} \hlopt{%in%} \hlkwd{c}\hlstd{(}\hlstr{"STORE"}\hlstd{,} \hlstr{"SalePriceCH"}\hlstd{,}
-           \hlstr{"SalePriceMM"}\hlstd{,}\hlstr{"PriceDiff"}\hlstd{,} \hlstr{"ListPriceDiff"}\hlstd{))]}
-\hlstd{OJsub}\hlopt{$}\hlstd{Store7} \hlkwb{=} \hlkwd{as.double}\hlstd{(OJsub}\hlopt{$}\hlstd{Store7)} \hlopt{-} \hlnum{1}
-\hlstd{m.log} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"glm"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<>>=
+OJsub = OJ[!(colnames(OJ) %in% c("STORE", "SalePriceCH",
+           "SalePriceMM","PriceDiff", "ListPriceDiff"))]
+OJsub$Store7 = as.double(OJsub$Store7) - 1
+m.log = train(Purchase ~ ., data = OJsub, method = "glm")
+@
 
 \noindent The problem of linear combinations of predictors can be shown with this simple theoretical example. Suppose we have a response $y$ and three predictors $x_1$, $x_2$ and the linear combination $(x_1 + x_2)$. On fitting a linear model we try to find estimates of the parameters in the equation
 \[
@@ -177,37 +204,39 @@ This leads to a rank deficient model matrix, essentially we can never find the v
 
 We could acheive the same using the caret package function \cc{findLinearCombos}. The function takes a model matrix as an argument. We can create such a matrix using the 
 \cc{model.matrix} function with our formula object
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{remove} \hlkwb{=} \hlkwd{findLinearCombos}\hlstd{(}\hlkwd{model.matrix}\hlstd{(Purchase}\hlopt{~}\hlstd{.,} \hlkwc{data} \hlstd{= OJ))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<cache=TRUE>>=
+remove = findLinearCombos(model.matrix(Purchase~., data = OJ))
+@
 \noindent The output list has a component called \cc{remove} suggesting which variables should be removed to get rid of linear combinations
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{(badvar} \hlkwb{=} \hlkwd{colnames}\hlstd{(OJ)[remove}\hlopt{$}\hlstd{remove])}
-\end{alltt}
-\begin{verbatim}
-## [1] "SalePriceMM"   "SalePriceCH"   "PriceDiff"     "ListPriceDiff"
-## [5] "STORE"
-\end{verbatim}
-\begin{alltt}
-\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,} \hlopt{-}\hlstd{(remove}\hlopt{$}\hlstd{remove)]}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<cache=TRUE, tidy=TRUE>>=
+(badvar = colnames(OJ)[remove$remove])
+OJsub = OJ[,-(remove$remove)]
+@
 \end{itemize}
 
 \begin{itemize}
   \item How accurate is this new model using more predictors?]
-
+<<echo=echo, cache=TRUE, results=results>>=
+# the corrected model
+remove = findLinearCombos(model.matrix(Purchase~., data = OJ))
+(badvar = colnames(OJ)[remove$remove])
+OJsub = OJ[,-(remove$remove)]
+mLM = train(Purchase~., data = OJsub, method = "glm")
+mean(predict(mLM,OJsub) == OJsub$Purchase)
+@ 
   \item What are the values of sensitivity and specificity?
+<<echo=echo, results=results>>=
+## could use confusionMatrix
+(cmLM = confusionMatrix(predict(mLM,OJsub),OJsub$Purchase))
 
+# or 
+sensitivity(predict(mLM,OJsub),OJsub$Purchase)
+specificity(predict(mLM,OJsub),OJsub$Purchase)
+@ 
   \item What does this mean?
-
+<<echo=echo, tidy=TRUE>>=
+#The model is fairly good at picking up both positive events, person buys CH, and negative events, MM.
+@
 
 \end{itemize}
 % Now that we have fitted a simple model we can look at it's accuracy using the \cc{confusionMatrix} function
@@ -223,62 +252,90 @@ We could acheive the same using the caret package function \cc{findLinearCombos}
 \end{marginfigure}
 
 If we were interested in the area under the ROC curve, we could retrain the model using the \cc{twoClassSummary} function as an argument to a train control object. Alternatively we can use the \cc{roc} function in the \cc{pROC} package. This also allows us to view the ROC curve, see figure~\ref{fig:roc}. 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(}\hlstr{"pROC"}\hlstd{)}
-\end{alltt}
-
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Type 'citation("{}pROC"{})' for a citation.\\\#\# \\\#\# Attaching package: 'pROC'\\\#\# \\\#\# The following objects are masked from 'package:stats':\\\#\# \\\#\#\ \ \ \  cov, smooth, var}}\begin{alltt}
-\hlstd{curve} \hlkwb{=} \hlkwd{roc}\hlstd{(}\hlkwc{response} \hlstd{= OJsub}\hlopt{$}\hlstd{Purchase,}
-  \hlkwc{predictor} \hlstd{=} \hlkwd{predict}\hlstd{(m.log,} \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)[,}\hlstr{"CH"}\hlstd{])}
-\hlcom{## this makes CH the event of interest}
-\hlkwd{plot}\hlstd{(curve,} \hlkwc{legacy.axes} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-\hlkwd{auc}\hlstd{(curve)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
+<<cache=TRUE, results="hide", fig.keep="none">>=
+library("pROC")
+curve = roc(response = OJsub$Purchase, 
+  predictor = predict(m.log, type = "prob")[,"CH"])
+## this makes CH the event of interest
+plot(curve, legacy.axes = TRUE)
+auc(curve)
+@
+<<echo = FALSE, message = FALSE, include = FALSE>>=
+## this makes CH the event of interest
+pdf("graphics/roc.pdf", width = 4, height = 4)
+par(mfrow = c(1,1))
+plot(curve, legacy.axes = TRUE)
+text(0.2,0.2,round(auc(curve),5))
+sink  =dev.off()
+system("pdfcrop graphics/roc.pdf")
+@
 
 \section*{Other classification models}
 
 \begin{itemize}
   \item Try fitting models using the other classification algorithms we have seen so far.\marginnote{We have seen LDA, QDA, KNN and logistic regression.}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: MASS}}\end{kframe}
-\end{knitrout}
+<<echo=echo, cache=TRUE, results=results>>=
+mKNN = train(Purchase~., data = OJsub, method = "knn")
+mLDA = train(Purchase~., data = OJsub, method = "lda")
+mQDA = train(Purchase~., data = OJsub, method = "qda")
+cmKNN = confusionMatrix(predict(mKNN,OJsub),OJsub$Purchase)
+cmLDA = confusionMatrix(predict(mLDA,OJsub),OJsub$Purchase)
+cmQDA = confusionMatrix(predict(mQDA,OJsub),OJsub$Purchase)
+(info = data.frame(Model = c("logistic","knn","lda","qda"),
+           Accuracy = c(cmLM$overall["Accuracy"],
+               cmKNN$overall["Accuracy"],
+               cmLDA$overall["Accuracy"],
+               cmQDA$overall["Accuracy"]),
+           Sensitivity = c(cmLM$byClass["Sensitivity"],
+               cmKNN$byClass["Sensitivity"],
+               cmLDA$byClass["Sensitivity"],
+               cmQDA$byClass["Sensitivity"]),
+           Specificity = c(cmLM$byClass["Specificity"],
+               cmKNN$byClass["Specificity"],
+               cmLDA$byClass["Specificity"],
+               cmQDA$byClass["Specificity"])))
+@   
   \item How do they compare?
-
+<<echo=echo, tidy=FALSE>>=
+#Logistic regression and LDA have highest accuracy, QDA is poorest at classifying events, KNN gives most false positives
+@
 
   \item How does varying the number of nearest neighbours in a KNN affect the model fit?
-
+<<echo=echo, tidy=TRUE, cache=TRUE, results=results>>=
+#Accuracy increases at first with knn before then getting worse after a peak value of 9.
+(mKNN2 = train(Purchase~., data = OJsub, method = "knn",
+    tuneGrid = data.frame(k = 1:30)))
+@
 \end{itemize}
 
 \noindent The KNN algorithm described in the notes can also be used for regression problems. In this case the predicted response is the mean of the $k$ nearest neighbours.
 \begin{itemize}
   \item Try fitting the KNN model for the regression problem in practical 1. 
-
+<<warning =FALSE, fig.keep="none", echo=echo, cache=TRUE, results=results, message=FALSE>>=
+library("nclRpredictive")
+data(FuelEconomy, package = "AppliedPredictiveModeling")
+regKNN = train(FE~., data = cars2010, method = "knn")
+regLM = train(FE~., data = cars2010, method = "lm")
+regKNN= validate(regKNN)
+regLM = validate(regLM)
+mark(regKNN)
+mark(regLM)
+@ 
 
   \item How does this compare to the linear regression models?
 
-
+<<echo=echo, tidy=TRUE>>=
+#The KNN regression model is not as good as the linear model at predicting the test set. It overestimates more at the lower end.
+@
 
 \end{itemize}
 
 \section*{An example with more than two classes}
 
 The \cc{Glass} data set in the \cc{mlbench} package is a data frame containing examples of the chemical analysis of $7$ different types of glass. The goal is to be able to predict which category glass falls into based on the values of the $9$ predictors.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(Glass,} \hlkwc{package} \hlstd{=} \hlstr{"mlbench"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+<<>>=
+data(Glass, package = "mlbench")
+@
 
 \noindent A logistic regression model is typically not suitable for more than $2$ classes, so try fitting the other models using a training set that consists of 90\% of the available data.\marginnote{The function \cc{createDataPartition} can be used here, see notes for a reminder.}
 
