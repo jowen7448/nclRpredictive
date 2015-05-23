@@ -29,10 +29,11 @@ SOLSRNW =  $(SOLS:=.Rnw)
 #force: 
 #	make -C $(DIR) -f ../Makefile all
 
-all: $(PRACSPDF) $(OTHERPDF)
+check.txt: $(PRACSPDF) $(OTHERPDF)
 	make solutions*.Rnw
 	make sols
 	cp -fvr figure graphics ../../vignettes
+	touch check.txt
 
 
 
@@ -80,7 +81,7 @@ clean:
 		*.aux *.dvi *.log *.toc *.bak *~ *.blg *.bbl *.lot *.lof \
 		 *.nav *.snm *.out *.pyc \#*\# _region_* _tmp.* *.vrb \
 		Rplots.pdf example.RData d.csv.gz mygraph.* \
-		knitr_* knitr.sty .Rhistory ex.data
+		knitr_* knitr.sty .Rhistory ex.data check.txt
 
 cleaner:
 	make clean
