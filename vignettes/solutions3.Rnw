@@ -201,28 +201,28 @@ We can overlay the information from each method using \cc{add = TRUE}. In additi
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##   0.388   0.004   0.391
+##   0.537   0.000   0.537
 \end{verbatim}
 \begin{alltt}
 \hlstd{mKNNcv5}\hlopt{$}\hlstd{time}\hlopt{$}\hlstd{everything}
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##   1.456   0.000   1.458
+##   1.809   0.000   1.807
 \end{verbatim}
 \begin{alltt}
 \hlstd{mKNNcv10}\hlopt{$}\hlstd{time}\hlopt{$}\hlstd{everything}
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##   1.768   0.004   1.779
+##   1.991   0.000   1.990
 \end{verbatim}
 \begin{alltt}
 \hlstd{mKNNboot}\hlopt{$}\hlstd{time}\hlopt{$}\hlstd{everything}
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##   25.79    0.02   25.90
+##   28.92    0.00   28.89
 \end{verbatim}
 \begin{alltt}
 \hlcom{# The validation set approach was quickest, however we must bear in mind}

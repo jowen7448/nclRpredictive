@@ -1,0 +1,5 @@
+.build.timestamp
+*-concordance.tex
+*.log
+*syn*.gz
+*.tex

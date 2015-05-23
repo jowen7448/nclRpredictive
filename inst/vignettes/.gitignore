@@ -1,0 +1,10 @@
+cache
+figure
+graphics
+knitr.sty
+*.aux
+*.log
+*.tex
+*.out
+solutions?.pdf
+practical?.pdf

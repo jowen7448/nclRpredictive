@@ -3,4 +3,5 @@
 #' @import elasticnet lars
 #' @import gam ipred randomForest gbm kernlab e1071
 #' @importFrom pls coefplot
+#' @importFrom ggplot2 geom_point
 NULL

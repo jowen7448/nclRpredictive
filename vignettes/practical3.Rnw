@@ -123,6 +123,8 @@ The \cc{diabetes} data set in the \cc{lars} package contains measurements of a n
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 
 
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: elasticnet\\\#\# Loading required package: lars\\\#\# Loaded lars 1.2}}
+
 {\ttfamily\noindent\color{warningcolor}{\#\# Warning: model fit failed for Resample04: fraction=0.9 Error in if (zmin < gamhat) \{ : missing value where TRUE/FALSE needed}}
 
 {\ttfamily\noindent\color{warningcolor}{\#\# Warning in nominalTrainWorkflow(x = x, y = y, wts = weights, info = trainInfo, : There were missing values in resampled performance measures.}}
@@ -170,7 +172,12 @@ We can view what the coefficients will be by using
   \item How many features have been chosen by the lasso and enet models?
 
   \item How do these models compare to principal components and partial least squares regression?
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: pls\\\#\# \\\#\# Attaching package: 'pls'\\\#\# \\\#\# The following object is masked from 'package:caret':\\\#\# \\\#\#\ \ \ \  R2\\\#\# \\\#\# The following object is masked from 'package:stats':\\\#\# \\\#\#\ \ \ \  loadings}}\end{kframe}
+\end{knitrout}
 \end{itemize}
 
 
