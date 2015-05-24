@@ -58,9 +58,7 @@ automatically install any packages that we use during the course. To load the pa
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
 \end{alltt}
-
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: no function found corresponding to methods exports from 'SparseM' for: 'coerce'}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \noindent During this practical we will the \cc{caret} package
 \begin{knitrout}
@@ -322,7 +320,7 @@ The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with vie
 \hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res}\hlopt{*}\hlstd{res))}
 \end{alltt}
 \begin{verbatim}
-## [1] 4.385
+## [1] 4.494
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

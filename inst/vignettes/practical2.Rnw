@@ -26,7 +26,7 @@ opts_knit$set(out.format = "latex")
 \usepackage{graphicx}
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 \graphicspath{{graphics/}}
-\title{Predictive Analytics: practical 2\Sexpr{ifelse(echo, "solutions", "")}}
+\title{Predictive Analytics: practical 2 \Sexpr{ifelse(echo, "solutions", "")}}
 \date{} % if the \date{} command is left out, the current date will be used
 
 \usepackage{booktabs}
@@ -43,26 +43,28 @@ opts_knit$set(out.format = "latex")
 
 \section*{The \cc{OJ} data set}
 
-The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of two brands of orange juice customers purchased and can be loaded in using
+The \cc{OJ} dataset from the \cc{ISLR} package contains information on which of two brands of orange juice customers purchased\sidenote{The response variable is \cc{Purchase}.} and can be loaded using
 <<>>=
 data(OJ, package = "ISLR")
 @
 
-\noindent After loading the \cc{caret} package 
+\noindent After loading the \cc{caret} and \cc{nclRpredictive} package 
 <<message = FALSE>>=
 library("caret")
+library("nclRpredictive")
 @
 
-\noindent Make an initial examination of the relationships between each of the predictors and the response\sidenote{Use the \cc{plot} function with a model formula or the \cc{pairs} function.}
+\noindent make an initial examination of the relationships between each of the predictors and the response\sidenote{Use the \cc{plot} function with a model formula or the \cc{pairs} function.}
 <<eval = echo, fig.keep="none">>=
-par(mfrow = c(4,5), mar= c(4,.5,.5,.5))
-plot(Purchase~., data = OJ)
+par(mfrow = c(4, 5), mar= c(4, .5, .5, .5))
+plot(Purchase ~ ., data = OJ)
 @ 
 
 \section*{Initial model building}
 
 \begin{itemize}
-\item To begin, create a logistic regression model that takes into consideration the prices of the two brands of orange juice, \cc{PriceCH} and \cc{PriceMM}.\sidenote{Hint: The train function does model fitting, the method argument specifies the type of model. \cc{method = ``glm''} is used for logistic regression.}
+\item To begin, create a logistic regression model that takes into consideration the prices of the two brands of orange juice, \cc{PriceCH} and \cc{PriceMM}.\sidenote{Hint: The train function does model fitting, the method argument specifies the type of model. \cc{method = ``glm''} is used for logistic regression.  Look at the help page for the dataset to understand what these
+variables represent.}
 <<echo=echo, cache=TRUE>>=
 m1 = train(Purchase ~ PriceCH + PriceMM,
     data = OJ, method = "glm")
@@ -81,79 +83,36 @@ mean(preds != OJ$Purchase)
 @ 
 \end{itemize}
 
-\noindent The following code produces a plot of the decision boundary as seen in figure~\ref{fig:purchaseboundary}.
-<<eval = TRUE, fig.keep="none">>=
-## Set up a grid for prediction
-chrange = range(OJ$PriceCH)
-mmrange = range(OJ$PriceMM)
-chseq = seq(chrange[1],chrange[2],length.out = 100)
-mmseq = seq(mmrange[1],mmrange[2],length.out = 100)
-grid = expand.grid("PriceCH" = chseq, "PriceMM" = mmseq)
+\section*{Visualising the boundary}
 
-# make the predictions
-predictions = predict(m1,grid,type = "prob")
-# turn the predictions into a matrix for a contour plot
-predmat = matrix(predictions[,2], nrow=100)
-contour(chseq, mmseq, predmat, levels = 0.5,
-        xlab = "Price CH", ylab = "Price MM",
-        lwd = 2, main = "Blue = MM")
-
-# the background points indicating prediction
-points(grid,col = c("red","blue")[predict(m1,grid)], 
-       cex = 0.2)
-# there are few unique combinations of prices, 
-# jitter can help see the points
-# points of prices coloured by purchased brand
-points(jitter(OJ$PriceCH,factor = 2),
-       jitter(OJ$PriceMM, factor = 2),
-       col = c("red","blue")[OJ$Purchase], 
-       pch = 19, cex  =0.6)
-
-# add dashed line of equal price
-abline(0,1,lwd = 2, lty = 2)
+The \cc{nclRpredictive} package contains following code produces a plot of the decision boundary as seen in figure~\ref{fig:purchaseboundary}.
+<<figure1,fig.keep="none", echo=2>>=
+setnicepar()
+boundary_plot(m1,OJ$PriceCH, OJ$PriceMM, OJ$Purchase,
+              xlab="Price CH", ylab="Price MM")
 @
-
-<<echo = FALSE>>=
-pdf("graphics/purchaseboundary.pdf", width = 4, height = 4)
-contour(chseq, mmseq, predmat, levels = 0.5,
-        xlab = "Price CH", ylab = "Price MM",
-        lwd = 2, main = "Blue = MM")
-# the background points indicating prediction
-points(grid,col = c("red","blue")[predict(m1,grid)], 
-       cex = 0.2)
-# there are few unique combinations of prices, 
-# jitter can help see the points
-# points of prices coloured by purchased brand
-points(jitter(OJ$PriceCH,factor = 2), 
-       jitter(OJ$PriceMM, factor = 2),
-       col = c("red","blue")[OJ$Purchase], 
-       pch = 19, cex = 0.6)
-# add dashed line of equal price
-abline(0,1,lwd = 2, lty = 2)
-sink = dev.off()
-system("pdfcrop graphics/purchaseboundary.pdf")
-@
+\noindent Run the boundary code above, and make sure you get a similar plot.
 
 \begin{marginfigure}
-  \includegraphics[width = \textwidth]{graphics/purchaseboundary-crop}
+<<figure1,echo=FALSE>>=
+@
   \caption{Examining the decision boundary for orange juice brand purchases by price.}
   \label{fig:purchaseboundary}
 \end{marginfigure}
 
-%% \textbf{XXX: Typing the above code will take a while. Look at the nclRexercises
-%% package and use the same trick to allow partipants to load the code}
 \begin{itemize}
   \item What happens if we add an interaction term? How does the boundary change?
 <<echo=echo, tidy=TRUE>>=
-#We now have a curved decision boundary. There are two regions of where we would predict MM, bottom left, and a tiny one up in the top right.
+# We now have a curved decision boundary. 
+# There are two regions of where we would predict MM, bottom left, and a tiny one up in the top right.
 @
-
+\item Try adding polynomial terms.
 \end{itemize}
 
 \section*{Using all of the predictors}
 
 \begin{itemize}
-  \item Fit a logistic regression model using all of the predictors
+  \item Fit a logistic regression model using all of the predictors.
 <<echo=echo, warning=FALSE>>=
 mLM = train(Purchase ~ ., data = OJ, method = "glm")
 @ 
@@ -163,7 +122,7 @@ mLM = train(Purchase ~ ., data = OJ, method = "glm")
 @
 
 \noindent We can view the most recent warning messages by using the \cc{warnings} function
-<<warnings=FALSE,results="none">>=
+<<warnings=FALSE,results="none", message=FALSE>>=
 warnings()
 @
 

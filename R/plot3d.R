@@ -4,6 +4,8 @@
 #' @param xvar The variable to be plotted as the x axis
 #' @param yvar The variable to be plotted as the y axis
 #' @param zvar The response variable being predicted
+#' @param phi Angle defining the viewing direction.  phi give the colatitude direction. Default 30.
+#' @param theta Angles defining the viewing direction. theta gives the azimuthal direction. Default 30.
 #' @param points A logical argument if TRUE the resultant plot will also 
 #' show the observed points around the fitted surface with red points 
 #' highlighting those for which the model under estimates and blue points 
@@ -18,7 +20,7 @@
 #' op = par(mar = c(1,1,1,1))
 #' plot3d(m,advertising$TV, advertising$Radio, advertising$Sales, points = TRUE)
 #' par(op)
-plot3d = function(model,xvar,yvar,zvar,points = FALSE,...){
+plot3d = function(model,xvar,yvar,zvar, phi = 30, theta = 30,points = FALSE,...){
   x = seq(min(xvar),max(xvar),length.out = 50)
   y = seq(min(yvar),max(yvar),length.out = 50)
   
@@ -29,7 +31,7 @@ plot3d = function(model,xvar,yvar,zvar,points = FALSE,...){
   })
   
   names = all.vars(formula(model))
-  p = persp(x,y,z,xlab = names[2],ylab = names[3], zlab = names[1], phi = 30, theta = 30,...)
+  p = persp(x,y,z,xlab = names[2],ylab = names[3], zlab = names[1],...)
   if(points){
     zvar.fit = fitted(model)
     i.pos = 1 + (zvar.fit > zvar)

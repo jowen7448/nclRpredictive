@@ -17,7 +17,7 @@ Imports: caret,
   partykit, mlbench, gridExtra,
   elasticnet, pls, lars,
   gam, ipred, randomForest, gbm,
-  kernlab, e1071, ggplot2
+  kernlab, e1071, ggplot2, threejs
 Suggests: knitr
 VignetteBuilder: knitr
 LazyData: true

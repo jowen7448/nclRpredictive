@@ -33,6 +33,7 @@ check.txt: $(PRACSPDF) $(OTHERPDF)
 	make solutions*.Rnw
 	make sols
 	cp -fvr figure graphics ../../vignettes
+	cp $(ALLPDF) ../../../rcourses.github.io/$(PKG)/
 	touch check.txt
 
 
@@ -50,7 +51,7 @@ solutions%.Rnw: $(PRACSPDF)
 		sed -i "5s/.*/results='show';echo=TRUE/" $(var);)
 
 sols: $(SOLSPDF)
-#	cp $(ALLPDF) ../../rcourses.github.io/$(PKG)/
+
 
 view: $(MAIN).pdf
 	xpdf $(MAIN).pdf &
