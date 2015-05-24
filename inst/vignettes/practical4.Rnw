@@ -21,6 +21,7 @@ knit_hooks$set(par=function(before, options, envir){
         par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
             mgp=c(2,.7,0),tcl=-.01, las=1)
 }}, crop=hook_pdfcrop)
+options(width=58)
 opts_knit$set(out.format = "latex")
 @
 \usepackage{amsmath}
@@ -53,7 +54,7 @@ The final practical is intended to let you have a go fitting models to any of th
 \begin{itemize}
 \item One possible avenue to explore is the \cc{cars2010} data set from the first practical.
 \item You could use the validate and mark functions to see how the more complex models compare with the simpler models from yesterday and to see who can make the best predictive model.
-\item Models to try could be the regression trees, neural networks, support vector machines, anything that we have covered in the notes.
+\item Models to try could be the regression trees, neural networks, support vector machines, anything that we have covered in the notes. Remember to visualise boundaries using the \cc{plot3d} and \cc{boundary\_plot} functions.
 \end{itemize}
 
 \noindent Alternatively you could pick a data set and try to follow the worked example and find optimal sets of predictors for your chosen response.\marginnote{If you have a classification response you would typically optimize for the probability of the event.}
@@ -66,18 +67,18 @@ contains a list of models currently supported by \cc{caret}. If one of these is 
 
 \section*{Advanced}
 
-This section is intended for users who have a more in depth background to R programming. Attendance to the Programming in R course should be adequate background.
+\marginnote{This section is intended for users who have a more in depth background to R programming. Attendance to the Programming in R course should be adequate background.}
 
-\cc{caret} is a very useful package, neatly boxing up model fitting and prediction, including finding tuning parameters based on resampling estimates of model statistics. In practical 3 we saw that we could specify our own statistics by which to choose models. Here we will extend that example adding a new model method that can be used with train.
+\cc{caret} is a very useful package, neatly boxing up model fitting and prediction, including finding tuning parameters based on resampling estimates of model statistics. In practical $3$ we saw that we could specify our own statistics by which to choose models. Here we will extend that example adding a new model method that can be used with train.
 
-The practical 3 advanced section motivates choice of model based on a custom metric, the distance from perfect classification model. Each classification in a two class model has so far been made when the probability of an event is greater than 50\%. If we had a scenario where a false positive is more expensive than a false negative we might consider changing the classification threshold. We will consider this by creating a custom model fit based on a LDA.
+The practical $3$ advanced section motivates choice of model based on a custom metric, the distance from perfect classification model. Each classification in a two class model has so far been made when the probability of an event is greater than 50\%. If we had a scenario where a false positive is more expensive than a false negative we might consider changing the classification threshold. We will consider this by creating a custom model fit based on a LDA.
 
 To start we need an idea of how the model methods are looked at from the \cc{caret train} function. When a method is called \cc{caret} calls the \cc{getModelInfo()} function.
 <<tidy=TRUE>>=
 modInfo = getModelInfo(model = "lda", regex = FALSE)[[1]]
 names(modInfo)
 @
-We can use \cc{str} to get an idea of the structure, essentially we just want to modify bits of this list in order to specify out custom model. We will create a list to match each necessary component and where no change is necessary we will just assign the components from modInfo.
+\noindent We can use \cc{str} to get an idea of the structure, essentially we just want to modify bits of this list in order to specify out custom model. We will create a list to match each necessary component and where no change is necessary we will just assign the components from modInfo.
 
 <<>>=
 customModel = list(label = "custom",

@@ -17,10 +17,9 @@
 #' @examples
 #' data(advertising)
 #' m = caret::train(Sales~TV + Radio, data = advertising, method = "lm")
-#' op = par(mar = c(1,1,1,1))
 #' plot3d(m,advertising$TV, advertising$Radio, advertising$Sales, points = TRUE)
-#' par(op)
 plot3d = function(model,xvar,yvar,zvar, phi = 30, theta = 30,points = FALSE,...){
+  op = par(mar = c(1,1,1,1)); on.exit(par(op))
   x = seq(min(xvar),max(xvar),length.out = 50)
   y = seq(min(yvar),max(yvar),length.out = 50)
   
@@ -31,7 +30,8 @@ plot3d = function(model,xvar,yvar,zvar, phi = 30, theta = 30,points = FALSE,...)
   })
   
   names = all.vars(formula(model))
-  p = persp(x,y,z,xlab = names[2],ylab = names[3], zlab = names[1],...)
+  p = persp(x,y,z,xlab = names[2],ylab = names[3], zlab = names[1],
+            phi=phi, theta=theta,...)
   if(points){
     zvar.fit = fitted(model)
     i.pos = 1 + (zvar.fit > zvar)

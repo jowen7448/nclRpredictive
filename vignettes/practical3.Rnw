@@ -8,7 +8,7 @@
 \usepackage{graphicx}
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 \graphicspath{{graphics/}}
-\title{Predictive Analytics: practical 3}
+\title{Predictive Analytics: practical 3 }
 \date{} % if the \date{} command is left out, the current date will be used
 \usepackage{booktabs}
 \usepackage{units}
@@ -32,7 +32,6 @@
 
 
   \item Estimate test error using the validation set approach explored at the beginning of the chapter
-
 
 
   \item Using the same validation set, estimate the performance of the k nearest neighbours algorithm for different values of $k$.
@@ -62,7 +61,6 @@
                   \hlkwc{returnResamp} \hlstd{=} \hlstr{"all"}\hlstd{)}
 \hlstd{m} \hlkwb{=} \hlkwd{train}\hlstd{(FE}\hlopt{~}\hlstd{.,} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{,}
           \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{k} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{15}\hlstd{),} \hlkwc{trControl} \hlstd{= tc)}
-
 \hlkwd{boxplot}\hlstd{(RMSE}\hlopt{~}\hlstd{k,} \hlkwc{data} \hlstd{= m}\hlopt{$}\hlstd{resample)}
 \end{alltt}
 \end{kframe}
@@ -75,7 +73,6 @@
   \caption{$15$ fold cross validation estimates of RMSE in a $K$ nearest neighbours model against number of nearest neighbours.}
   \label{fig:cvresamp}
 \end{figure}
-
 
 We can overlay the information from each method using \cc{add = TRUE}. In addition we could compare the computational cost of each of the methods. The output list from a \cc{train} object contains timing information which can be accessed
 \begin{knitrout}
@@ -119,13 +116,8 @@ The \cc{diabetes} data set in the \cc{lars} package contains measurements of a n
 
 \begin{itemize}
 \item Try fitting a lasso, ridge and elastic net model using all of the main effects, pairwise interactions and square terms from each of the predictors.\sidenote{Hint: see notes for shortcut on creating model formula. Also be aware that if the predictor is a factor a polynomial term doesn't make sense}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: elasticnet\\\#\# Loading required package: lars\\\#\# Loaded lars 1.2}}\end{kframe}
-\end{knitrout}
-\marginnote{fraction = 0 is the same as the null model.}
+\marginnote{\cc{fraction = 0} is the same as the null model.}
 \marginnote{ 
 \cc{$y \sim (.) \wedge 2$}
 is short hand for a model that includes pairwise interactions for each predictor, so if we use this we should only need to add the square terms}
@@ -144,19 +136,8 @@ is short hand for a model that includes pairwise interactions for each predictor
 
 
   \item Try to narrow in on the region of lowest RMSE for each model, don't forget about the \cc{tuneGrid} argument to the train function.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: model fit failed for Resample01: fraction=0.5 Error in if (zmin < gamhat) \{ : missing value where TRUE/FALSE needed}}
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning in nominalTrainWorkflow(x = x, y = y, wts = weights, info = trainInfo, : There were missing values in resampled performance measures.}}
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: model fit failed for Resample24: fraction=0.15 Error in if (zmin < gamhat) \{ : missing value where TRUE/FALSE needed}}
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning in nominalTrainWorkflow(x = x, y = y, wts = weights, info = trainInfo, : There were missing values in resampled performance measures.}}\end{kframe}
-\end{knitrout}
-We can view what the coefficients will be by using
+\noindent We can view what the coefficients will be by using
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -173,12 +154,7 @@ We can view what the coefficients will be by using
   \item How many features have been chosen by the lasso and enet models?
 
   \item How do these models compare to principal components and partial least squares regression?
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: pls\\\#\# \\\#\# Attaching package: 'pls'\\\#\# \\\#\# The following object is masked from 'package:caret':\\\#\# \\\#\#\ \ \ \  R2\\\#\# \\\#\# The following object is masked from 'package:stats':\\\#\# \\\#\#\ \ \ \  loadings}}\end{kframe}
-\end{knitrout}
 \end{itemize}
 
 
@@ -229,7 +205,7 @@ To add our function we need to make sure we mirror the structure of those includ
 \end{kframe}
 \end{knitrout}
 
-\noindent The \cc{plot} function will then show the profile of the resampling estimates of our chosen statistic against the tuning parameters, see figure~\ref{fig:newsummary}.
+\noindent The \cc{plot} function 
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -240,16 +216,22 @@ To add our function we need to make sure we mirror the structure of those includ
 \end{knitrout}
 
 \begin{marginfigure}
-  \includegraphics[]{graphics/newsummary-crop}
-  \caption{Plot of the distance from a perfect classifier measured by sensitivity and specificity against tuning parameter for a k nearest neighbour model.}
+\centering
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=\maxwidth]{figure/figure2-1} 
+
+\end{knitrout}
+  \caption{Plot of the distance from a perfect classifier measured by sensitivity and specificity against tuning parameter for a $k$ nearest neighbour model.}
   \label{fig:newsummary}
 \end{marginfigure}
+
+\noindent will then show the profile of the resampling estimates of our chosen statistic against the tuning parameters, see figure~\ref{fig:newsummary}.
 
 \begin{itemize}
   \item Have a go at writing a function that will allow a regression model to be chosen by the absolute value of the largest residual and try using it to fit a couple of models.
 
 \end{itemize}
-% \noindent Have a go at writing a function that will allow a regression models by the absolute value of the largest residual and try using it to fit a couple of models.
 
 \end{document}
 

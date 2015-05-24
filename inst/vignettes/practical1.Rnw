@@ -22,7 +22,7 @@ knit_hooks$set(par=function(before, options, envir){
 }}, crop=hook_pdfcrop)
 
 
-opts_knit$set(out.format = "latex")
+#opts_knit$set(out.format = "latex")
 options(width=56)
 dir.create("graphics",showWarnings = FALSE)
 @
@@ -151,7 +151,7 @@ plot(cars2010$FE, fitted.values(m1$finalModel),
      xlim=c(10, 75), ylim=c(10, 75) )
 abline(0, 1, col=3, lty=2)
 @
-\caption{Plot of fitted values against fitted values. It's always important to 
+\caption{Plot of fitted against observed values. It's always important to 
 pay attention to the scales.}
 \end{marginfigure}
 
@@ -247,7 +247,8 @@ threejs::scatterplot3js(cars2010$EngDispl, cars2010$NumCyl,
 \begin{itemize}
   \item Try fitting other variations of this model using these two predictors. For example, try adding polynomial and interaction terms
 <<>>=
-m4 = train(FE~EngDispl*NumCyl + I(NumCyl^5), data = cars2010, method = "lm")
+m4 = train(FE~EngDispl*NumCyl + I(NumCyl^5), 
+           data = cars2010, method = "lm")
 @
 
   

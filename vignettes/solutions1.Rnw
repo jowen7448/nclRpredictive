@@ -10,7 +10,7 @@
 \usepackage{graphicx}
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 %\graphicspath{{vignettes/graphics/}}
-\title{Predictive Analytics: practical 1solutions}
+\title{Predictive Analytics: practical 1 solutions}
 \date{} % if the \date{} command is left out, the current date will be used
 % The following package makes prettier tables. We're all about the bling!
 \usepackage{booktabs}
@@ -33,8 +33,8 @@
 
 \section*{Course R package}
 
-Installing the course R package\sidenote{A package is an \textit{add-on} or a \textit{module}. It provides additional functions and data.}
-is straightforward. First install \cc{drat}
+Installing the course R package\sidenote{A package is an \textit{add-on} or a \textit{module}. 
+It provides additional functions and data.} is straightforward. First install \cc{drat}\sidenote{\cc{drat} is a package that makes it easy to host and distribute packages.}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -52,15 +52,17 @@ is straightforward. First install \cc{drat}
 \end{kframe}
 \end{knitrout}
 \noindent This R package contains copies of the practicals, solutions and data sets that we require. It will also
-automatically install any packages that we use during the course. To load the package, use
+automatically install any packages\sidenote{For example, we will need the \cc{caret}, \cc{mlbench}, \cc{pROC} and \cc{splines} to name a few.} that we use during the course. To load the course package, use
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
 \end{alltt}
-\end{kframe}
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning: no function found corresponding to methods exports from 'SparseM' for: 'coerce'}}\end{kframe}
 \end{knitrout}
-\noindent During this practical we will the \cc{caret} package
+\noindent During this practical we will mainly use thehe \cc{caret} package, we should load that package as well
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -69,11 +71,13 @@ automatically install any packages that we use during the course. To load the pa
 \end{kframe}
 \end{knitrout}
 
-\section*{The cars2010 data set}
+\section*{The \cc{cars2010} data set}
 
-The \cc{cars2010} data set contains information about car models in $2010$. The aim is to model the \cc{FE} variable which is a fuel economy measure based on $13$ predictors.\sidenote{Further information can be found in the help page, \cc{help(cars2010)}.}
+The \cc{cars2010} data set contains information about car models in $2010$. The aim is to model the \cc{FE} variable which is a fuel economy measure based on $13$ 
+predictors.\sidenote{Further information can be found in the help page, 
+\cc{help("cars2010", package = "AppliedPredictiveModeling")}.}
 
-The data is part of the \cc{AppliedPredictiveModeling} package and can be loaded by,
+The data is part of the \cc{AppliedPredictiveModeling} package and can be loaded by
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -82,18 +86,18 @@ The data is part of the \cc{AppliedPredictiveModeling} package and can be loaded
 \end{kframe}
 \end{knitrout}
 
-
+\noindent There are a lot of questions below marked out by bullet points. Don't worry if you can't finish them all, the intention
+is that there is material for different backgrounds and levels
 
 \section*{Exploring the data}
 
-\noindent There are a lot of questions to be considered below marked out by bullet points in the document. Don't worry if you can't finish them all, I intended for there to be enough such that if anyone wants to continue trying things at home they can.
 
 \begin{itemize}
   \item Prior to any analysis we should get an idea of the relationships between variables in the data.\marginnote{The \cc{FE $\sim$ .} notation is shorthand for \cc{FE} against all variables in the data frame specified by the \cc{data} argument.} Use the \cc{pairs} function to explore the data. The first few are shown in figure~\ref{fig:fig1_1}.
 
 An alternative to using \cc{pairs} is to specify a plot device that has enough
 space for the number of plots required to plot the response against
-each predictor. We don't get all the pairwise information amongst predictors but it saves a lot of space on the plot and makes it easier to see what's going on. Its also a good idea to make smaller margins. 
+each predictor
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -103,8 +107,9 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \end{alltt}
 \end{kframe}
 \end{knitrout}
+\noindent We don't get all the pairwise information amongst predictors but it saves a lot of space on the plot and makes it easier to see what's going on. It is also a good idea to make smaller margins. 
 
-\end{itemize}
+
 
 \begin{figure}[t]
 \begin{knitrout}
@@ -116,9 +121,7 @@ each predictor. We don't get all the pairwise information amongst predictors but
   \label{fig:fig1_1}
 \end{figure}
 
-
-\begin{itemize}
-  \item Create a simple linear model fit of \cc{FE} against \cc{EngDispl} using the \cc{train} function.\sidenote{Remember, to specify a particular model type we use the \cc{method} argument.}
+  \item Create a simple linear model fit of \cc{FE} against \cc{EngDispl} using the \cc{train} function.\sidenote{Hint: use the \cc{train} function with the \cc{lm} method.}
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -143,7 +146,7 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{abline}\hlstd{(}\hlkwc{h} \hlstd{=} \hlkwd{c}\hlstd{(}\hlopt{-}\hlnum{2}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{2}\hlstd{),} \hlkwc{col} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{3}\hlstd{,} \hlnum{2}\hlstd{),} \hlkwc{lty} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{))}
+\hlkwd{abline}\hlstd{(}\hlkwc{h} \hlstd{=} \hlkwd{c}\hlstd{(}\hlopt{-}\hlnum{2}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{2}\hlstd{),} \hlkwc{col} \hlstd{=} \hlnum{2}\hlopt{:}\hlnum{3}\hlstd{,} \hlkwc{lty} \hlstd{=} \hlnum{2}\hlopt{:}\hlnum{1}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -155,17 +158,30 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \hlcom{# There definitely appears to be some trend in the}
 \hlcom{# residuals.  The curved shape indicates that we}
 \hlcom{# potentially require some transformation of variables.}
-\hlcom{# A square term might help.}
+\hlcom{# A squared term might help.}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
+
+\begin{marginfigure}
+\centering
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=\maxwidth]{figure/figure2-1} 
+
+\end{knitrout}
+\caption{Plot of fitted against observed values. It's always important to 
+pay attention to the scales.}
+\end{marginfigure}
 
 \item Plot the fitted values vs the observed values
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{plot}\hlstd{(cars2010}\hlopt{$}\hlstd{FE,} \hlkwd{fitted.values}\hlstd{(m1}\hlopt{$}\hlstd{finalModel))}
-\hlkwd{abline}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{)}
+\hlkwd{plot}\hlstd{(cars2010}\hlopt{$}\hlstd{FE,} \hlkwd{fitted.values}\hlstd{(m1}\hlopt{$}\hlstd{finalModel),}
+     \hlkwc{xlab}\hlstd{=}\hlstr{"FE"}\hlstd{,} \hlkwc{ylab}\hlstd{=}\hlstr{"Fitted values"}\hlstd{,}
+     \hlkwc{xlim}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{10}\hlstd{,} \hlnum{75}\hlstd{),} \hlkwc{ylim}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{10}\hlstd{,} \hlnum{75}\hlstd{) )}
+\hlkwd{abline}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{1}\hlstd{,} \hlkwc{col}\hlstd{=}\hlnum{3}\hlstd{,} \hlkwc{lty}\hlstd{=}\hlnum{2}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -180,7 +196,7 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-  \item Produce other diagnostic plots of this fitted model
+  \item Produce other diagnostic plots of this fitted model, e.g. a q-q plot
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -194,19 +210,20 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{## We are struggling to justify the assumption of}
-\hlcom{## normality in the residuals here, all of the diagnostics}
-\hlcom{## indicate patterns remain in the residuals that are}
-\hlcom{## currently unexplained by the model.}
+\hlcom{# We are struggling to justify the assumption of}
+\hlcom{# normality in the residuals here, all of the diagnostics}
+\hlcom{# indicate patterns remain in the residuals that are}
+\hlcom{# currently unexplained by the model.}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 \end{itemize}
 \end{itemize}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Extending the model}
-
 
 \begin{itemize}
   \item Do you think adding a quadratic term will improve the model fit?
@@ -226,14 +243,14 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{m2} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlkwd{poly}\hlstd{(EngDispl,}\hlnum{2}\hlstd{,}\hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{),} \hlkwc{data} \hlstd{= cars2010,}
+\hlstd{m2} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlkwd{poly}\hlstd{(EngDispl,} \hlnum{2}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{),} \hlkwc{data} \hlstd{= cars2010,}
     \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
 \begin{itemize}
-  \item Assess the modelling assumptions for this new model
+  \item Assess the modelling assumptions for this new model.
   \item How do the two models compare?
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -256,11 +273,11 @@ each predictor. We don't get all the pairwise information amongst predictors but
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-  \item Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}
+  \item Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m3}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{m5} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl,} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
+\hlstd{m3} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl,} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -270,27 +287,56 @@ each predictor. We don't get all the pairwise information amongst predictors but
 
 % Add \cc{NumCyl} as a predictor to the simple linear regression model \cc{m1} and call it \cc{m5}. Examine model fit and compare to the original. Does the model improve with the addition of an extra variable?
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Visualising the model}
 
 The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with viewing these surfaces in 3D as in figure~\ref{fig:fesurface}.\sidenote{We can also add the observed points to the plot using the \cc{points} argument to this function, see the help page for further information.}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{plot3d}\hlstd{(m5,cars2010}\hlopt{$}\hlstd{EngDispl, cars2010}\hlopt{$}\hlstd{NumCyl, cars2010}\hlopt{$}\hlstd{FE)}
+\hlcom{## points = TRUE to also show the points}
+\hlkwd{plot3d}\hlstd{(m3,cars2010}\hlopt{$}\hlstd{EngDispl, cars2010}\hlopt{$}\hlstd{NumCyl,}
+       \hlstd{cars2010}\hlopt{$}\hlstd{FE,} \hlkwc{points} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\noindent We can also examine just the data interactively, via
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{threejs}\hlopt{::}\hlkwd{scatterplot3js}\hlstd{(cars2010}\hlopt{$}\hlstd{EngDispl, cars2010}\hlopt{$}\hlstd{NumCyl,}
+                        \hlstd{cars2010}\hlopt{$}\hlstd{FE,} \hlkwc{size}\hlstd{=}\hlnum{0.5}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
 \begin{marginfigure}
-  \includegraphics[]{graphics/fesurface-crop}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=\maxwidth]{figure/figure3-1} 
+
+\end{knitrout}
   \caption{A surface plot from a linear model of fuel economy against the number of cylinders and engine displacement including the interaction term.}
   \label{fig:fesurface}
 \end{marginfigure}
 
 
 \begin{itemize}
-  \item Try fitting other variations of this model using these two predictors, how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface.
+  \item Try fitting other variations of this model using these two predictors. For example, try adding polynomial and interaction terms
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{m4} \hlkwb{=} \hlkwd{train}\hlstd{(FE}\hlopt{~}\hlstd{EngDispl}\hlopt{*}\hlstd{NumCyl} \hlopt{+} \hlkwd{I}\hlstd{(NumCyl}\hlopt{^}\hlnum{5}\hlstd{),} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+  
+  
+  
+  how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface.
   \item If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
 \end{itemize}
 
@@ -320,7 +366,7 @@ The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with vie
 \hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res}\hlopt{*}\hlstd{res))}
 \end{alltt}
 \begin{verbatim}
-## [1] 4.494
+## [1] 4.592
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

@@ -58,7 +58,9 @@ automatically install any packages\sidenote{For example, we will need the \cc{ca
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
 \end{alltt}
-\end{kframe}
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning: no function found corresponding to methods exports from 'SparseM' for: 'coerce'}}\end{kframe}
 \end{knitrout}
 \noindent During this practical we will mainly use thehe \cc{caret} package, we should load that package as well
 \begin{knitrout}
@@ -146,7 +148,7 @@ each predictor
 \includegraphics[width=\maxwidth]{figure/figure2-1} 
 
 \end{knitrout}
-\caption{Plot of fitted values against fitted values. It's always important to 
+\caption{Plot of fitted against observed values. It's always important to 
 pay attention to the scales.}
 \end{marginfigure}
 
@@ -269,7 +271,7 @@ The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with vie
 \hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res}\hlopt{*}\hlstd{res))}
 \end{alltt}
 \begin{verbatim}
-## [1] 5.084
+## [1] 4.62
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

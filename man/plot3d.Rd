@@ -33,8 +33,6 @@ This is a function for assisting with 3d plots for the predictive analytics cour
 \examples{
 data(advertising)
 m = caret::train(Sales~TV + Radio, data = advertising, method = "lm")
-op = par(mar = c(1,1,1,1))
 plot3d(m,advertising$TV, advertising$Radio, advertising$Sales, points = TRUE)
-par(op)
 }
 

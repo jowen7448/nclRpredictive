@@ -8,7 +8,7 @@
 \usepackage{graphicx}
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 \graphicspath{{graphics/}}
-\title{Predictive Analytics: practical 2solutions}
+\title{Predictive Analytics: practical 2 solutions}
 \date{} % if the \date{} command is left out, the current date will be used
 
 \usepackage{booktabs}
@@ -25,7 +25,7 @@
 
 \section*{The \cc{OJ} data set}
 
-The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of two brands of orange juice customers purchased and can be loaded in using
+The \cc{OJ} data set from the \cc{ISLR} package contains information on which of two brands of orange juice customers purchased\sidenote{The response variable is \cc{Purchase}.} and can be loaded using
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -34,21 +34,22 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 \end{kframe}
 \end{knitrout}
 
-\noindent After loading the \cc{caret} package 
+\noindent After loading the \cc{caret} and \cc{nclRpredictive} package 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"caret"}\hlstd{)}
+\hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
-\noindent Make an initial examination of the relationships between each of the predictors and the response\sidenote{Use the \cc{plot} function with a model formula or the \cc{pairs} function.}
+\noindent make an initial examination of the relationships between each of the predictors and the response\sidenote{Use the \cc{plot} function with a model formula or the \cc{pairs} function.}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,}\hlnum{5}\hlstd{),} \hlkwc{mar}\hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,}\hlnum{.5}\hlstd{,}\hlnum{.5}\hlstd{,}\hlnum{.5}\hlstd{))}
-\hlkwd{plot}\hlstd{(Purchase}\hlopt{~}\hlstd{.,} \hlkwc{data} \hlstd{= OJ)}
+\hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{5}\hlstd{),} \hlkwc{mar}\hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{.5}\hlstd{,} \hlnum{.5}\hlstd{,} \hlnum{.5}\hlstd{))}
+\hlkwd{plot}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -56,7 +57,8 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 \section*{Initial model building}
 
 \begin{itemize}
-\item To begin, create a logistic regression model that takes into consideration the prices of the two brands of orange juice, \cc{PriceCH} and \cc{PriceMM}.\sidenote{Hint: The train function does model fitting, the method argument specifies the type of model. \cc{method = ``glm''} is used for logistic regression.}
+\item To begin, create a logistic regression model that takes into consideration the prices of the two brands of orange juice, \cc{PriceCH} and \cc{PriceMM}.\sidenote{Hint: Use the \cc{train} function, with \cc{method = 'glm'}.  Look at the help page for the data set to understand what these
+variables represent.}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -87,75 +89,58 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 \hlkwd{mean}\hlstd{(preds} \hlopt{!=} \hlstd{OJ}\hlopt{$}\hlstd{Purchase)}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.4991
+## [1] 0.5009
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 \end{itemize}
 
-\noindent The following code produces a plot of the decision boundary as seen in figure~\ref{fig:purchaseboundary}.
+\section*{Visualising the boundary}
+
+The \cc{nclRpredictive} package contains following code produces a plot of the decision boundary as seen in figure~\ref{fig:purchaseboundary}.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{## Set up a grid for prediction}
-\hlstd{chrange} \hlkwb{=} \hlkwd{range}\hlstd{(OJ}\hlopt{$}\hlstd{PriceCH)}
-\hlstd{mmrange} \hlkwb{=} \hlkwd{range}\hlstd{(OJ}\hlopt{$}\hlstd{PriceMM)}
-\hlstd{chseq} \hlkwb{=} \hlkwd{seq}\hlstd{(chrange[}\hlnum{1}\hlstd{],chrange[}\hlnum{2}\hlstd{],}\hlkwc{length.out} \hlstd{=} \hlnum{100}\hlstd{)}
-\hlstd{mmseq} \hlkwb{=} \hlkwd{seq}\hlstd{(mmrange[}\hlnum{1}\hlstd{],mmrange[}\hlnum{2}\hlstd{],}\hlkwc{length.out} \hlstd{=} \hlnum{100}\hlstd{)}
-\hlstd{grid} \hlkwb{=} \hlkwd{expand.grid}\hlstd{(}\hlstr{"PriceCH"} \hlstd{= chseq,} \hlstr{"PriceMM"} \hlstd{= mmseq)}
-
-\hlcom{# make the predictions}
-\hlstd{predictions} \hlkwb{=} \hlkwd{predict}\hlstd{(m1,grid,}\hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)}
-\hlcom{# turn the predictions into a matrix for a contour plot}
-\hlstd{predmat} \hlkwb{=} \hlkwd{matrix}\hlstd{(predictions[,}\hlnum{2}\hlstd{],} \hlkwc{nrow}\hlstd{=}\hlnum{100}\hlstd{)}
-\hlkwd{contour}\hlstd{(chseq, mmseq, predmat,} \hlkwc{levels} \hlstd{=} \hlnum{0.5}\hlstd{,}
-        \hlkwc{xlab} \hlstd{=} \hlstr{"Price CH"}\hlstd{,} \hlkwc{ylab} \hlstd{=} \hlstr{"Price MM"}\hlstd{,}
-        \hlkwc{lwd} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{main} \hlstd{=} \hlstr{"Blue = MM"}\hlstd{)}
-
-\hlcom{# the background points indicating prediction}
-\hlkwd{points}\hlstd{(grid,}\hlkwc{col} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"red"}\hlstd{,}\hlstr{"blue"}\hlstd{)[}\hlkwd{predict}\hlstd{(m1,grid)],}
-       \hlkwc{cex} \hlstd{=} \hlnum{0.2}\hlstd{)}
-\hlcom{# there are few unique combinations of prices, }
-\hlcom{# jitter can help see the points}
-\hlcom{# points of prices coloured by purchased brand}
-\hlkwd{points}\hlstd{(}\hlkwd{jitter}\hlstd{(OJ}\hlopt{$}\hlstd{PriceCH,}\hlkwc{factor} \hlstd{=} \hlnum{2}\hlstd{),}
-       \hlkwd{jitter}\hlstd{(OJ}\hlopt{$}\hlstd{PriceMM,} \hlkwc{factor} \hlstd{=} \hlnum{2}\hlstd{),}
-       \hlkwc{col} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"red"}\hlstd{,}\hlstr{"blue"}\hlstd{)[OJ}\hlopt{$}\hlstd{Purchase],}
-       \hlkwc{pch} \hlstd{=} \hlnum{19}\hlstd{,} \hlkwc{cex}  \hlstd{=}\hlnum{0.6}\hlstd{)}
-
-\hlcom{# add dashed line of equal price}
-\hlkwd{abline}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{,}\hlkwc{lwd} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{lty} \hlstd{=} \hlnum{2}\hlstd{)}
+\hlkwd{boundary_plot}\hlstd{(m1,OJ}\hlopt{$}\hlstd{PriceCH, OJ}\hlopt{$}\hlstd{PriceMM, OJ}\hlopt{$}\hlstd{Purchase,}
+              \hlkwc{xlab}\hlstd{=}\hlstr{"Price CH"}\hlstd{,} \hlkwc{ylab}\hlstd{=}\hlstr{"Price MM"}\hlstd{)}
 \end{alltt}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in localPlotWindow(xlim, ylim, ...): formal argument "{}xlab"{} matched by multiple actual arguments}}\end{kframe}
 \end{knitrout}
-
-
+\noindent Run the boundary code above, and make sure you get a similar plot.
 
 \begin{marginfigure}
-  \includegraphics[width = \textwidth]{graphics/purchaseboundary-crop}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in localPlotWindow(xlim, ylim, ...): formal argument "{}xlab"{} matched by multiple actual arguments}}\end{kframe}
+\includegraphics[width=\maxwidth]{figure/figure1-1} 
+
+\end{knitrout}
   \caption{Examining the decision boundary for orange juice brand purchases by price.}
   \label{fig:purchaseboundary}
 \end{marginfigure}
 
-%% \textbf{XXX: Typing the above code will take a while. Look at the nclRexercises
-%% package and use the same trick to allow partipants to load the code}
 \begin{itemize}
   \item What happens if we add an interaction term? How does the boundary change?
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{# We now have a curved decision boundary. There are two regions of where we}
-\hlcom{# would predict MM, bottom left, and a tiny one up in the top right.}
+\hlcom{# We now have a curved decision boundary.  There are two}
+\hlcom{# regions of where we would predict MM, bottom left, and a}
+\hlcom{# tiny one up in the top right.}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-
+\item Try adding polynomial terms.
 \end{itemize}
 
 \section*{Using all of the predictors}
 
 \begin{itemize}
-  \item Fit a logistic regression model using all of the predictors
+  \item Fit a logistic regression model using all of the predictors.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -178,9 +163,6 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 \begin{alltt}
 \hlkwd{warnings}\hlstd{()}
 \end{alltt}
-\begin{verbatim}
-## NULL
-\end{verbatim}
 \end{kframe}
 \end{knitrout}
 
@@ -199,16 +181,18 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 ## Call:  NULL
 ## 
 ## Coefficients:
-##    (Intercept)  WeekofPurchase         StoreID         PriceCH  
-##         5.1581         -0.0118         -0.1709          4.5865  
-##        PriceMM          DiscCH          DiscMM       SpecialCH  
-##        -3.6249         10.7967         26.4615          0.2672  
-##      SpecialMM         LoyalCH     SalePriceMM     SalePriceCH  
-##         0.3169         -6.3023              NA              NA  
-##      PriceDiff       Store7Yes       PctDiscMM       PctDiscCH  
-##             NA          0.3113        -50.6976        -27.3399  
-##  ListPriceDiff           STORE  
-##             NA              NA  
+##    (Intercept)  WeekofPurchase         StoreID  
+##         5.1581         -0.0118         -0.1709  
+##        PriceCH         PriceMM          DiscCH  
+##         4.5865         -3.6249         10.7967  
+##         DiscMM       SpecialCH       SpecialMM  
+##        26.4615          0.2672          0.3169  
+##        LoyalCH     SalePriceMM     SalePriceCH  
+##        -6.3023              NA              NA  
+##      PriceDiff       Store7Yes       PctDiscMM  
+##             NA          0.3113        -50.6976  
+##      PctDiscCH   ListPriceDiff           STORE  
+##       -27.3399              NA              NA  
 ## 
 ## Degrees of Freedom: 1069 Total (i.e. Null);  1057 Residual
 ## Null Deviance:	    1430 
@@ -217,6 +201,7 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 \end{kframe}
 \end{knitrout}
 
+\noindent The help page
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -224,20 +209,19 @@ The \cc{OJ} dataset of the \cc{ISLR} package contains information on which of tw
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-\noindent gives further insight, the \cc{PriceDiff} variable is a linear combination of \cc{SalePriceMM} and \cc{SalePriceCH} so we should remove this. In addition we have a \cc{StoreID} variable and a \cc{STORE} variable are different encodings of the same information so we should remove one of these too. We also have \cc{DiscCH} and \cc{DiscMM} which are the differences between \cc{PriceCH} and \cc{SalePriceCH} and 
-\cc{PriceMM} and \cc{SalePriceMM} respectively and \cc{ListPriceDiff} is a linear combination of these prices. Removing all of these vairables allows the model to be fit and all parameters to be estimated.\sidenote{This is to highlight that we need to understand what we have in our data.}
+\noindent gives further insight: the \cc{PriceDiff} variable is a linear combination of \cc{SalePriceMM} and \cc{SalePriceCH} so we should remove this. In addition the \cc{StoreID} and \cc{STORE} variable are different encodings of the same information so we should remove one of these too. We also have \cc{DiscCH} and \cc{DiscMM} which are the differences between \cc{PriceCH} and \cc{SalePriceCH} and \cc{PriceMM} and \cc{SalePriceMM} respectively and \cc{ListPriceDiff} is a linear combination of these prices. Removing all of these variables allows the model to be fit and all parameters to be estimated.\sidenote{This is to highlight that we need to understand what we have in our data.}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[}\hlopt{!}\hlstd{(}\hlkwd{colnames}\hlstd{(OJ)} \hlopt{%in%} \hlkwd{c}\hlstd{(}\hlstr{"STORE"}\hlstd{,} \hlstr{"SalePriceCH"}\hlstd{,}
+\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,}\hlopt{!}\hlstd{(}\hlkwd{colnames}\hlstd{(OJ)} \hlopt{%in%} \hlkwd{c}\hlstd{(}\hlstr{"STORE"}\hlstd{,} \hlstr{"SalePriceCH"}\hlstd{,}
            \hlstr{"SalePriceMM"}\hlstd{,}\hlstr{"PriceDiff"}\hlstd{,} \hlstr{"ListPriceDiff"}\hlstd{))]}
-\hlstd{OJsub}\hlopt{$}\hlstd{Store7} \hlkwb{=} \hlkwd{as.double}\hlstd{(OJsub}\hlopt{$}\hlstd{Store7)} \hlopt{-} \hlnum{1}
-\hlstd{m.log} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"glm"}\hlstd{)}
+\hlstd{OJsub}\hlopt{$}\hlstd{Store7} \hlkwb{=} \hlkwd{as.numeric}\hlstd{(OJsub}\hlopt{$}\hlstd{Store7)} \hlopt{-} \hlnum{1}
+\hlstd{m_log} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"glm"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
-\noindent The problem of linear combinations of predictors can be shown with this simple theoretical example. Suppose we have a response $y$ and three predictors $x_1$, $x_2$ and the linear combination $(x_1 + x_2)$. On fitting a linear model we try to find estimates of the parameters in the equation
+\noindent The problem of linear combinations of predictors can be shown with this simple theoretical example. Suppose we have a response $y$ and three predictors $x_1$, $x_2$ and the linear combination $x_3 = (x_1 + x_2)$. On fitting a linear model we try to find estimates of the parameters in the equation
 \[
 y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 (x_1 + x_2).
 \]
@@ -247,14 +231,15 @@ y &= \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 (x_1 + x_2) \\
 &= \beta_0 + (\beta_1 + \beta_3) x_1 + (\beta_2 + \beta_3) x_2 \\
 &= \beta_0 + \beta_1^{\ast} x_1 + \beta_2^{\ast} x_2.
 \end{align*}
-This leads to a rank deficient model matrix, essentially we can never find the value of the $\beta_3$ due to the fact we have the linear combination of predictors.
+This leads to a rank--deficient model matrix, essentially we can never find the value of the $\beta_3$ due to the fact we have the linear combination of predictors.
 
-We could acheive the same using the caret package function \cc{findLinearCombos}. The function takes a model matrix as an argument. We can create such a matrix using the 
+We could achieve the same using the \cc{caret} package function \cc{findLinearCombos}. The function takes a model matrix as an argument. We can create such a matrix using the 
 \cc{model.matrix} function with our formula object
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{remove} \hlkwb{=} \hlkwd{findLinearCombos}\hlstd{(}\hlkwd{model.matrix}\hlstd{(Purchase}\hlopt{~}\hlstd{.,} \hlkwc{data} \hlstd{= OJ))}
+\hlstd{remove} \hlkwb{=} \hlkwd{findLinearCombos}\hlstd{(}
+               \hlkwd{model.matrix}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ))}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -265,17 +250,14 @@ We could acheive the same using the caret package function \cc{findLinearCombos}
 \hlstd{(badvar} \hlkwb{=} \hlkwd{colnames}\hlstd{(OJ)[remove}\hlopt{$}\hlstd{remove])}
 \end{alltt}
 \begin{verbatim}
-## [1] "SalePriceMM"   "SalePriceCH"   "PriceDiff"     "ListPriceDiff"
-## [5] "STORE"
+## [1] "SalePriceMM"   "SalePriceCH"   "PriceDiff"    
+## [4] "ListPriceDiff" "STORE"
 \end{verbatim}
 \begin{alltt}
-\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,} \hlopt{-}\hlstd{(remove}\hlopt{$}\hlstd{remove)]}
+\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,} \hlopt{-}\hlstd{remove}\hlopt{$}\hlstd{remove]}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-\end{itemize}
-
-\begin{itemize}
   \item How accurate is this new model using more predictors?]
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -285,8 +267,8 @@ We could acheive the same using the caret package function \cc{findLinearCombos}
 \hlstd{(badvar} \hlkwb{=} \hlkwd{colnames}\hlstd{(OJ)[remove}\hlopt{$}\hlstd{remove])}
 \end{alltt}
 \begin{verbatim}
-## [1] "SalePriceMM"   "SalePriceCH"   "PriceDiff"     "ListPriceDiff"
-## [5] "STORE"
+## [1] "SalePriceMM"   "SalePriceCH"   "PriceDiff"    
+## [4] "ListPriceDiff" "STORE"
 \end{verbatim}
 \begin{alltt}
 \hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,}\hlopt{-}\hlstd{(remove}\hlopt{$}\hlstd{remove)]}
@@ -352,36 +334,44 @@ We could acheive the same using the caret package function \cc{findLinearCombos}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{# The model is fairly good at picking up both positive events, person buys}
-\hlcom{# CH, and negative events, MM.}
+\hlcom{# The model is fairly good at picking up both positive}
+\hlcom{# events, person buys CH, and negative events, MM.}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
 \end{itemize}
-% Now that we have fitted a simple model we can look at it's accuracy using the \cc{confusionMatrix} function
-% <<>>=
-% confusionMatrix(predict(m.log),OJsub$Purchase)
-% @
 
 \section*{ROC curves}
+
 \begin{marginfigure}
-  \includegraphics[width = \textwidth]{graphics/roc-crop}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=\maxwidth]{figure/figure2-1} 
+
+\end{knitrout}
   \caption{An example of a ROC curve for the logistic regression classifier. We can overlay ROC curves by adding the \cc{add = TRUE} argument.}
   \label{fig:roc}
 \end{marginfigure}
 
-If we were interested in the area under the ROC curve, we could retrain the model using the \cc{twoClassSummary} function as an argument to a train control object. Alternatively we can use the \cc{roc} function in the \cc{pROC} package. This also allows us to view the ROC curve, see figure~\ref{fig:roc}. 
+If we were interested in the area under the ROC curve, we could retrain the model using the \cc{twoClassSummary} function as an argument to a train control object. Alternatively we can
+use the \cc{pROC} package
+
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"pROC"}\hlstd{)}
 \end{alltt}
+\end{kframe}
+\end{knitrout}
 
+\noindent This also allows us to view the ROC curve, via
 
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Type 'citation("{}pROC"{})' for a citation.\\\#\# \\\#\# Attaching package: 'pROC'\\\#\# \\\#\# The following objects are masked from 'package:stats':\\\#\# \\\#\#\ \ \ \  cov, smooth, var}}\begin{alltt}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
 \hlstd{curve} \hlkwb{=} \hlkwd{roc}\hlstd{(}\hlkwc{response} \hlstd{= OJsub}\hlopt{$}\hlstd{Purchase,}
-  \hlkwc{predictor} \hlstd{=} \hlkwd{predict}\hlstd{(m.log,} \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)[,}\hlstr{"CH"}\hlstd{])}
+  \hlkwc{predictor} \hlstd{=} \hlkwd{predict}\hlstd{(m_log,} \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)[,}\hlstr{"CH"}\hlstd{])}
 \hlcom{## this makes CH the event of interest}
 \hlkwd{plot}\hlstd{(curve,} \hlkwc{legacy.axes} \hlstd{=} \hlnum{TRUE}\hlstd{)}
 \hlkwd{auc}\hlstd{(curve)}
@@ -393,7 +383,8 @@ If we were interested in the area under the ROC curve, we could retrain the mode
 \section*{Other classification models}
 
 \begin{itemize}
-  \item Try fitting models using the other classification algorithms we have seen so far.\marginnote{We have seen LDA, QDA, KNN and logistic regression.}
+  \item Try fitting models using the other classification algorithms we have seen so far. To begin with, just have two covariates and use the \cc{boundary\_plot} function to visualise
+  the results\marginnote{We have seen LDA, QDA, KNN and logistic regression.}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -420,7 +411,7 @@ If we were interested in the area under the ROC curve, we could retrain the mode
 \begin{verbatim}
 ##      Model Accuracy Sensitivity Specificity
 ## 1 logistic   0.8355      0.8836      0.7602
-## 2      knn   0.8103      0.8775      0.7050
+## 2      knn   0.8065      0.8943      0.6691
 ## 3      lda   0.8374      0.8790      0.7722
 ## 4      qda   0.8168      0.8407      0.7794
 \end{verbatim}
@@ -439,9 +430,10 @@ If we were interested in the area under the ROC curve, we could retrain the mode
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{# Accuracy increases at first with knn before then getting worse after a}
-\hlcom{# peak value of 9.}
-\hlstd{(mKNN2} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{k} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{30}\hlstd{)))}
+\hlcom{# Accuracy increases at first with knn before then getting}
+\hlcom{# worse after a peak value of 9.}
+\hlstd{(mKNN2} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{,}
+    \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{k} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{30}\hlstd{)))}
 \end{alltt}
 \begin{verbatim}
 ## k-Nearest Neighbors 
@@ -458,39 +450,40 @@ If we were interested in the area under the ROC curve, we could retrain the mode
 ## Resampling results across tuning parameters:
 ## 
 ##   k   Accuracy  Kappa   Accuracy SD  Kappa SD
-##    1  0.6865    0.3429  0.01905      0.04086 
-##    2  0.6789    0.3256  0.01482      0.03211 
-##    3  0.6878    0.3433  0.01607      0.03650 
-##    4  0.6903    0.3473  0.02142      0.04852 
-##    5  0.6972    0.3599  0.01817      0.03885 
-##    6  0.6950    0.3536  0.02107      0.04507 
-##    7  0.7024    0.3673  0.02182      0.04477 
-##    8  0.7043    0.3705  0.01854      0.03940 
-##    9  0.7043    0.3700  0.02122      0.04357 
-##   10  0.7028    0.3647  0.02102      0.04496 
-##   11  0.7028    0.3624  0.02284      0.04627 
-##   12  0.7003    0.3570  0.02264      0.04720 
-##   13  0.6980    0.3521  0.02138      0.04282 
-##   14  0.6934    0.3425  0.02118      0.04166 
-##   15  0.6891    0.3334  0.02144      0.04248 
-##   16  0.6863    0.3254  0.02116      0.04236 
-##   17  0.6801    0.3108  0.02387      0.05030 
-##   18  0.6800    0.3108  0.02070      0.04282 
-##   19  0.6758    0.3011  0.02541      0.05330 
-##   20  0.6722    0.2918  0.02509      0.05249 
-##   21  0.6771    0.3014  0.02209      0.04607 
-##   22  0.6782    0.3052  0.02544      0.05194 
-##   23  0.6755    0.2985  0.02206      0.04714 
-##   24  0.6752    0.2973  0.02209      0.04561 
-##   25  0.6763    0.2992  0.02249      0.04667 
-##   26  0.6714    0.2882  0.01968      0.03993 
-##   27  0.6749    0.2953  0.01915      0.03983 
-##   28  0.6700    0.2843  0.02100      0.04432 
-##   29  0.6694    0.2828  0.02126      0.04416 
-##   30  0.6677    0.2812  0.02121      0.04395 
+##    1  0.6899    0.3488  0.01841      0.03965 
+##    2  0.6819    0.3330  0.02358      0.04886 
+##    3  0.6875    0.3429  0.02288      0.04676 
+##    4  0.6976    0.3623  0.02425      0.04919 
+##    5  0.7035    0.3720  0.02367      0.04591 
+##    6  0.7028    0.3706  0.02484      0.05051 
+##    7  0.7092    0.3832  0.02230      0.04454 
+##    8  0.7059    0.3753  0.02348      0.04835 
+##    9  0.7027    0.3680  0.02346      0.04739 
+##   10  0.7021    0.3642  0.02209      0.04608 
+##   11  0.6995    0.3575  0.02507      0.05257 
+##   12  0.6970    0.3529  0.02308      0.04998 
+##   13  0.6929    0.3435  0.01895      0.03753 
+##   14  0.6898    0.3366  0.01736      0.03794 
+##   15  0.6899    0.3361  0.02210      0.04810 
+##   16  0.6870    0.3293  0.02385      0.05150 
+##   17  0.6845    0.3231  0.02298      0.05053 
+##   18  0.6803    0.3144  0.02270      0.04846 
+##   19  0.6794    0.3122  0.02381      0.04969 
+##   20  0.6786    0.3086  0.02060      0.04550 
+##   21  0.6753    0.3007  0.01956      0.04538 
+##   22  0.6789    0.3082  0.02077      0.04708 
+##   23  0.6781    0.3054  0.02263      0.05287 
+##   24  0.6797    0.3087  0.02104      0.04802 
+##   25  0.6774    0.3025  0.02113      0.04835 
+##   26  0.6764    0.3000  0.02166      0.05089 
+##   27  0.6738    0.2944  0.01970      0.04519 
+##   28  0.6727    0.2919  0.02210      0.04973 
+##   29  0.6706    0.2861  0.02284      0.05242 
+##   30  0.6727    0.2904  0.02045      0.04555 
 ## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was k = 8.
+## Accuracy was used to select the optimal model using 
+##  the largest value.
+## The final value used for the model was k = 7.
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -519,8 +512,9 @@ If we were interested in the area under the ROC curve, we could retrain the mode
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{# The KNN regression model is not as good as the linear model at predicting}
-\hlcom{# the test set. It overestimates more at the lower end.}
+\hlcom{# The KNN regression model is not as good as the linear}
+\hlcom{# model at predicting the test set. It overestimates more}
+\hlcom{# at the lower end.}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -539,39 +533,5 @@ The \cc{Glass} data set in the \cc{mlbench} package is a data frame containing e
 \end{knitrout}
 
 \noindent A logistic regression model is typically not suitable for more than $2$ classes, so try fitting the other models using a training set that consists of 90\% of the available data.\marginnote{The function \cc{createDataPartition} can be used here, see notes for a reminder.}
-
-% \section*{Advanced}
-% 
-% Training of classification models is typically more difficult when there is an imbalance in the two classes in the training set. Models trained from such data typically have high specificity but poor sensitivity or vice versa. Instead of training to maximise accuracy using data from the training set we could try to maximise according to some other criteria, namely sensitivity and specificity being as close to perfect as possible (1,1).
-% 
-% We can define our own functions to train by
-% <<>>=
-% rfctrl = rfeControl(method = "cv")
-% remove = c(1,findLinearCombos(model.matrix(Purchase~., data = OJsub))$remove)
-% remove = c(remove, findCorrelation(cor(model.matrix(Purchase~., data = OJsub)[,-1])))
-% require(doMC)
-% registerDoMC(6)
-% m.log.rfe = rfe(x = model.matrix(Purchase~. , data = OJsub)[,-remove], 
-%                 y = OJsub$Purchase, rfeControl = rfctrl, 
-%                 method = "glm", trControl = trainControl("cv"), tuneLength = 7)
-% @
-% 
-% 
-% 
-% 
-% 
-% <<eval = FALSE>>=
-% var = function(model , response = NULL, predictor = response){
-%   y =as.double(response)
-%   res = residuals(model$finalModel)
-%   plot(predictor, res, col = c("blue","red")[y])
-%   lines(lowess(predictor,res),col="black",lwd=2)
-%   lines(lowess(predictor[y==1],res[y==1]),col="blue")
-% lines(lowess(predictor[y==2],res[y==2]),col="red")
-% abline(h=0,lty=2,col="grey")
-% }
-% @
-% 
-% 
 
 \end{document}

@@ -26,7 +26,7 @@ opts_knit$set(out.format = "latex")
 \usepackage{graphicx}
 \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
 \graphicspath{{graphics/}}
-\title{Predictive Analytics: practical 3}
+\title{Predictive Analytics: practical 3 \Sexpr{ifelse(echo, "solutions", "")}}
 \date{} % if the \date{} command is left out, the current date will be used
 \usepackage{booktabs}
 \usepackage{units}
@@ -58,7 +58,7 @@ mKNN = train(FE ~ ., method = "knn", data = cars2010)
   \item Estimate test error using the validation set approach explored at the beginning of the chapter
 <<echo=echo>>=
 # create a random sample to hold out
-i = sample(nrow(cars2010),100)
+i = sample(nrow(cars2010), 100)
 # set the train control object
 tc = trainControl(method = "cv", number = 1,
     index = list(Fold1 = (1:nrow(cars2010))[-i]))
@@ -66,7 +66,6 @@ tc = trainControl(method = "cv", number = 1,
 mKNNvs = train(FE~., method = "knn", data = cars2010,
     trControl = tc)
 @ 
-
 
   \item Using the same validation set, estimate the performance of the k nearest neighbours algorithm for different values of $k$.
 <<echo=echo, cache=TRUE>>=
@@ -128,7 +127,6 @@ tc = trainControl(method = "cv", number = 15,
                   returnResamp = "all")
 m = train(FE~., data = cars2010, method = "knn", 
           tuneGrid = data.frame(k = 1:15), trControl = tc)
-          
 boxplot(RMSE~k, data = m$resample)
 @
 <<echo = FALSE>>=
@@ -146,7 +144,6 @@ system("pdfcrop graphics/cvresamp.pdf")
   \caption{$15$ fold cross validation estimates of RMSE in a $K$ nearest neighbours model against number of nearest neighbours.}
   \label{fig:cvresamp}
 \end{figure}
-
 
 We can overlay the information from each method using \cc{add = TRUE}. In addition we could compare the computational cost of each of the methods. The output list from a \cc{train} object contains timing information which can be accessed
 <<eval = FALSE>>=
@@ -192,7 +189,7 @@ diabetesdata = cbind(diabetes$x,"y" = diabetes$y)
 
 \begin{itemize}
 \item Try fitting a lasso, ridge and elastic net model using all of the main effects, pairwise interactions and square terms from each of the predictors.\sidenote{Hint: see notes for shortcut on creating model formula. Also be aware that if the predictor is a factor a polynomial term doesn't make sense}
-<<echo=echo, results=results, cache=TRUE, tidy=0>>=
+<<echo=echo, results=results, cache=TRUE, tidy=TRUE, warning=FALSE, message=FALSE, eval=echo>>=
 ## load the data in 
 modelformula = as.formula(paste("y~(.)^2 + ",
     paste0("I(",colnames(diabetesdata),"^2)", 
@@ -205,7 +202,7 @@ mRIDGE = train(modelformula, data = diabetesdata,
 mENET = train(modelformula, data = diabetesdata,
     method = "enet")
 @ 
-\marginnote{fraction = 0 is the same as the null model.}
+\marginnote{\cc{fraction = 0} is the same as the null model.}
 \marginnote{ 
 \cc{$y \sim (.) \wedge 2$}
 is short hand for a model that includes pairwise interactions for each predictor, so if we use this we should only need to add the square terms}
@@ -224,7 +221,7 @@ is short hand for a model that includes pairwise interactions for each predictor
 
 
   \item Try to narrow in on the region of lowest RMSE for each model, don't forget about the \cc{tuneGrid} argument to the train function.
-<<echo=echo, results=results, cache=TRUE>>=
+<<echo=echo, results=results, cache=TRUE, warning=FALSE, eval=echo, message=FALSE>>=
 # examine previous output then train over a finer grid near the better end
 mLASSOfine = train(modelformula,data = diabetesdata,
     method = "lasso", tuneGrid = data.frame(fraction = seq(0.1,0.5,by = 0.05)))
@@ -257,7 +254,7 @@ mENETfiner = train(modelformula, data = diabetesdata,
 mENETfiner$results
 # 0.012, 0.5 best
 @ 
-We can view what the coefficients will be by using
+\noindent We can view what the coefficients will be by using
 <<eval = FALSE>>=
 coef = predict(m.lasso$finalModel,
         mode = "fraction",
@@ -268,7 +265,7 @@ coef = predict(m.lasso$finalModel,
 
 
   \item How many features have been chosen by the lasso and enet models?
-<<echo=echo, results=results, cache=TRUE>>=
+<<echo=echo, results=results, cache=TRUE, eval=echo>>=
 # use predict to find the coefficients
 coefLASSO = predict(mLASSOfiner$finalModel, mode = "fraction", 
         type = "coefficient", s = 0.09
@@ -280,7 +277,7 @@ coefENET= predict(mENETfiner$finalModel, mode = "fraction",
 sum(coefENET$coefficients != 0)
 @ 
   \item How do these models compare to principal components and partial least squares regression?
-<<echo=echo, results=results, tidy=TRUE, cache=TRUE>>=
+<<echo=echo, results=results, tidy=TRUE, cache=TRUE, message=FALSE, eval=echo>>=
 mPCR = train(modelformula, data = diabetesdata, method = "pcr",
              tuneGrid = data.frame(ncomp = 1:7))
 mPLS = train(modelformula, data = diabetesdata, method = "pls",
@@ -337,40 +334,41 @@ mod = train(Class ~ ., data = Sonar,
                      summaryFunction = fourStats))
 @
 
-\noindent The \cc{plot} function will then show the profile of the resampling estimates of our chosen statistic against the tuning parameters, see figure~\ref{fig:newsummary}.
+\noindent The \cc{plot} function 
 
-<<echo = 2, message = FALSE>>=
-pdf("graphics/newsummary.pdf", height = 4, width = 4)
+<<figure2, eval=FALSE>>=
 plot(mod)
-sink = dev.off()
-system("pdfcrop graphics/newsummary.pdf")
 @
 
 \begin{marginfigure}
-  \includegraphics[]{graphics/newsummary-crop}
-  \caption{Plot of the distance from a perfect classifier measured by sensitivity and specificity against tuning parameter for a k nearest neighbour model.}
+\centering
+<<figure2, echo=FALSE>>=
+@
+  \caption{Plot of the distance from a perfect classifier measured by sensitivity and specificity against tuning parameter for a $k$ nearest neighbour model.}
   \label{fig:newsummary}
 \end{marginfigure}
 
+\noindent will then show the profile of the resampling estimates of our chosen statistic against the tuning parameters, see figure~\ref{fig:newsummary}.
+
 \begin{itemize}
   \item Have a go at writing a function that will allow a regression model to be chosen by the absolute value of the largest residual and try using it to fit a couple of models.
-<<echo=echo, results=results, cache=TRUE, tidy=TRUE>>=
+<<echo=echo, results=results, cache=TRUE, tidy=TRUE, eval=echo, message=FALSE>>=
 maxabsres = function(data, lev = NULL, model = NULL){
     m = max(abs(data$obs - data$pred))
     return(c("Max" = m))
 }
-# test with pls regression
+# Test with pls regression
 tccustom = trainControl(method = "cv",
                      summaryFunction = maxabsres)
-mPLScustom = train(FE~., data = cars2010, method = "pls",
+mPLScustom = train(FE~., data = cars2010, 
+                   method = "pls",
                tuneGrid = data.frame(ncomp = 1:6),
                trControl = tccustom,
                metric = "Max", maximize = FALSE)
 # success
-# not to sugges this is a good choice of metric
+# not to suggest this is a good choice of metric
 @ 
 \end{itemize}
-% \noindent Have a go at writing a function that will allow a regression models by the absolute value of the largest residual and try using it to fit a couple of models.
 
 \end{document}
 
