@@ -9,10 +9,11 @@ results='hide';echo=FALSE
 if(!file.exists("graphics")) dir.create("graphics")
 # e = tryCatch(dir.create("graphics"), error = function(e) e)
 library(knitr)
-opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+fname = ifelse(echo, "solutions4-", "practical4-")
+opts_chunk$set(self.contained=FALSE, tidy = TRUE, 
               cache = TRUE, size = "small", message = FALSE,
-              fig.path='knitr_figure/graphics-', 
-               cache.path='knitr_cache/graphics-', 
+              fig.path=paste0('knitr_figure/', fname), 
+               cache.path=paste0('knitr_cache/',fname), 
                fig.align='center', 
                dev='pdf', fig.width=5, fig.height=5)
 
@@ -148,14 +149,14 @@ plot(varImp)
 
 <<echo = FALSE, message = FALSE>>=
 library("gridExtra")
-pdf("graphics/custommodel.pdf", width = 4.5, height = 9)
+pdf("graphics/p4-custommodel.pdf", width = 4.5, height = 9)
 grid.arrange(plot(mod), plot(varImp(mod)), ncol = 1)
 sink = dev.off()
-system("pdfcrop graphics/custommodel.pdf")
+system("pdfcrop graphics/p4-custommodel.pdf && rm graphics/p4-custommodel.pdf")
 @
 
 \begin{marginfigure}
-  \includegraphics[width = \textwidth]{graphics/custommodel-crop}
+  \includegraphics[width = \textwidth]{graphics/p4-custommodel-crop}
   \caption{Using the standard \cc{caret} plot functions with our custom model.}
   \label{fig:custom}
 \end{marginfigure}

@@ -32,7 +32,7 @@ SOLSRNW =  $(SOLS:=.Rnw)
 check.txt: $(PRACSPDF) $(OTHERPDF)
 	make solutions*.Rnw
 	make sols
-	cp -fvr figure graphics ../../vignettes
+	cp -fvr knitr_figure graphics ../../vignettes
 	cp $(ALLPDF) ../../../rcourses.github.io/$(PKG)/
 	touch check.txt
 
@@ -78,7 +78,7 @@ check:
 
 clean:
 	rm -fvr knitr_figure figure graphics cache
-	rm -fv $(ALLPDF)  *.tex *.synctex.gz \
+	rm -fvr $(ALLPDF)  *.tex *.synctex.gz \
 		*.aux *.dvi *.log *.toc *.bak *~ *.blg *.bbl *.lot *.lof \
 		 *.nav *.snm *.out *.pyc \#*\# _region_* _tmp.* *.vrb \
 		Rplots.pdf example.RData d.csv.gz mygraph.* \

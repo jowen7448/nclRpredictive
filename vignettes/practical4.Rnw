@@ -2,7 +2,56 @@
 %\VignetteEngine{Sweave}
 
 
-\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage{knitr}
+\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 
 \usepackage{amsmath}
 % Set up the images/graphics package
@@ -52,7 +101,7 @@ contains a list of models currently supported by \cc{caret}. If one of these is 
 The practical $3$ advanced section motivates choice of model based on a custom metric, the distance from perfect classification model. Each classification in a two class model has so far been made when the probability of an event is greater than 50\%. If we had a scenario where a false positive is more expensive than a false negative we might consider changing the classification threshold. We will consider this by creating a custom model fit based on a LDA.
 
 To start we need an idea of how the model methods are looked at from the \cc{caret train} function. When a method is called \cc{caret} calls the \cc{getModelInfo()} function.
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{modInfo} \hlkwb{=} \hlkwd{getModelInfo}\hlstd{(}\hlkwc{model} \hlstd{=} \hlstr{"lda"}\hlstd{,} \hlkwc{regex} \hlstd{=} \hlnum{FALSE}\hlstd{)[[}\hlnum{1}\hlstd{]]}
@@ -68,7 +117,7 @@ To start we need an idea of how the model methods are looked at from the \cc{car
 \end{knitrout}
 \noindent We can use \cc{str} to get an idea of the structure, essentially we just want to modify bits of this list in order to specify out custom model. We will create a list to match each necessary component and where no change is necessary we will just assign the components from modInfo.
 
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{customModel} \hlkwb{=} \hlkwd{list}\hlstd{(}\hlkwc{label} \hlstd{=} \hlstr{"custom"}\hlstd{,}
@@ -115,29 +164,26 @@ To start we need an idea of how the model methods are looked at from the \cc{car
 
 \noindent If define the fourStats function from practical 3 we can then fit the custom model
 
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{fourStats} \hlkwb{=} \hlkwa{function} \hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{lev} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{) \{}
-  \hlstd{out} \hlkwb{=} \hlkwd{twoClassSummary}\hlstd{(data,} \hlkwc{lev} \hlstd{=} \hlkwd{levels}\hlstd{(data}\hlopt{$}\hlstd{obs),}
-                        \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{)}
-  \hlstd{coords} \hlkwb{=} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{, out[}\hlstr{"Spec"}\hlstd{], out[}\hlstr{"Sens"}\hlstd{]),}
-                   \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{byrow} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-  \hlkwd{c}\hlstd{(}\hlkwc{Dist} \hlstd{=} \hlkwd{dist}\hlstd{(coords)[}\hlnum{1}\hlstd{], out)}
+\hlstd{fourStats} \hlkwb{=} \hlkwa{function}\hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{lev} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{) \{}
+    \hlstd{out} \hlkwb{=} \hlkwd{twoClassSummary}\hlstd{(data,} \hlkwc{lev} \hlstd{=} \hlkwd{levels}\hlstd{(data}\hlopt{$}\hlstd{obs),} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{)}
+    \hlstd{coords} \hlkwb{=} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{, out[}\hlstr{"Spec"}\hlstd{], out[}\hlstr{"Sens"}\hlstd{]),} \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{,}
+        \hlkwc{byrow} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+    \hlkwd{c}\hlstd{(}\hlkwc{Dist} \hlstd{=} \hlkwd{dist}\hlstd{(coords)[}\hlnum{1}\hlstd{], out)}
 \hlstd{\}}
 \hlkwd{set.seed}\hlstd{(}\hlnum{9}\hlstd{)}
 \hlkwd{data}\hlstd{(Sonar,} \hlkwc{package} \hlstd{=} \hlstr{"mlbench"}\hlstd{)}
-\hlstd{mod} \hlkwb{=} \hlkwd{train}\hlstd{(Class} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= Sonar,}
-  \hlkwc{method} \hlstd{= customModel,} \hlkwc{metric} \hlstd{=} \hlstr{"Dist"}\hlstd{,}
-  \hlkwc{maximize} \hlstd{=} \hlnum{FALSE}\hlstd{,}\hlkwc{tuneLength} \hlstd{=} \hlnum{20}\hlstd{,}
-  \hlkwc{trControl} \hlstd{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,}
-    \hlkwc{classProbs} \hlstd{=} \hlnum{TRUE}\hlstd{,} \hlkwc{summaryFunction} \hlstd{= fourStats))}
+\hlstd{mod} \hlkwb{=} \hlkwd{train}\hlstd{(Class} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= Sonar,} \hlkwc{method} \hlstd{= customModel,}
+    \hlkwc{metric} \hlstd{=} \hlstr{"Dist"}\hlstd{,} \hlkwc{maximize} \hlstd{=} \hlnum{FALSE}\hlstd{,} \hlkwc{tuneLength} \hlstd{=} \hlnum{20}\hlstd{,} \hlkwc{trControl} \hlstd{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,}
+        \hlkwc{classProbs} \hlstd{=} \hlnum{TRUE}\hlstd{,} \hlkwc{summaryFunction} \hlstd{= fourStats))}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
 \noindent If we examine the model output we can see that the best model has a prediction threshold of less than 0.5. The area under ROC is constant, but the specificity and sensitivity change. With following the structure of the caret models all of the other things still work like the plots in figure~\ref{fig:custom}.
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{plot}\hlstd{(mod)}
@@ -149,7 +195,7 @@ To start we need an idea of how the model methods are looked at from the \cc{car
 
 
 \begin{marginfigure}
-  \includegraphics[width = \textwidth]{graphics/custommodel-crop}
+  \includegraphics[width = \textwidth]{graphics/p4-custommodel-crop}
   \caption{Using the standard \cc{caret} plot functions with our custom model.}
   \label{fig:custom}
 \end{marginfigure}

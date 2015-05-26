@@ -3,7 +3,56 @@
 
 
 
-\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage{knitr}
+\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 
 \usepackage{amsmath, booktabs}
 % Set up the images/graphics package
@@ -35,7 +84,7 @@
 
 Installing the course R package\sidenote{A package is an \textit{add-on} or a \textit{module}. 
 It provides additional functions and data.} is straightforward. First install \cc{drat}\sidenote{\cc{drat} is a package that makes it easy to host and distribute packages.}
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{install.packages}\hlstd{(}\hlstr{"drat"}\hlstd{)}
@@ -43,7 +92,7 @@ It provides additional functions and data.} is straightforward. First install \c
 \end{kframe}
 \end{knitrout}
 \noindent Then
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{drat}\hlopt{::}\hlkwd{addRepo}\hlstd{(}\hlstr{"rcourses"}\hlstd{)}
@@ -53,17 +102,15 @@ It provides additional functions and data.} is straightforward. First install \c
 \end{knitrout}
 \noindent This R package contains copies of the practicals, solutions and data sets that we require. It will also
 automatically install any packages\sidenote{For example, we will need the \cc{caret}, \cc{mlbench}, \cc{pROC} and \cc{splines} to name a few.} that we use during the course. To load the course package, use
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
 \end{alltt}
-
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: no function found corresponding to methods exports from 'SparseM' for: 'coerce'}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \noindent During this practical we will mainly use thehe \cc{caret} package, we should load that package as well
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"caret"}\hlstd{)}
@@ -78,7 +125,7 @@ predictors.\sidenote{Further information can be found in the help page,
 \cc{help("cars2010", package = "AppliedPredictiveModeling")}.}
 
 The data is part of the \cc{AppliedPredictiveModeling} package and can be loaded by
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{data}\hlstd{(FuelEconomy,} \hlkwc{package} \hlstd{=} \hlstr{"AppliedPredictiveModeling"}\hlstd{)}
@@ -98,7 +145,7 @@ is that there is material for different backgrounds and levels
 An alternative to using \cc{pairs} is to specify a plot device that has enough
 space for the number of plots required to plot the response against
 each predictor
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{op} \hlkwb{=} \hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{5}\hlstd{),} \hlkwc{mar} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{2}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{1.5}\hlstd{))}
@@ -112,9 +159,14 @@ each predictor
 
 
 \begin{figure}[t]
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=\maxwidth]{figure/unnamed-chunk-8-1} 
+
+{\centering \includegraphics[width=\maxwidth]{knitr_figure/practical1-unnamed-chunk-8-1} 
+
+}
+
+
 
 \end{knitrout}
   \caption{Plotting the response against some of the predictor variables in the \cc{cars2010} data set.}
@@ -130,7 +182,7 @@ each predictor
 
 
 \noindent We can add the lines showing where we expect the residuals to fall to aid graphical inspection
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{abline}\hlstd{(}\hlkwc{h} \hlstd{=} \hlkwd{c}\hlstd{(}\hlopt{-}\hlnum{2}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{2}\hlstd{),} \hlkwc{col} \hlstd{=} \hlnum{2}\hlopt{:}\hlnum{3}\hlstd{,} \hlkwc{lty} \hlstd{=} \hlnum{2}\hlopt{:}\hlnum{1}\hlstd{)}
@@ -143,9 +195,14 @@ each predictor
 
 \begin{marginfigure}
 \centering
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=\maxwidth]{figure/figure2-1} 
+
+{\centering \includegraphics[width=\maxwidth]{knitr_figure/practical1-figure2-1} 
+
+}
+
+
 
 \end{knitrout}
 \caption{Plot of fitted against observed values. It's always important to 
@@ -198,29 +255,34 @@ pay attention to the scales.}
 \section*{Visualising the model}
 
 The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with viewing these surfaces in 3D as in figure~\ref{fig:fesurface}.\sidenote{We can also add the observed points to the plot using the \cc{points} argument to this function, see the help page for further information.}
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{## points = TRUE to also show the points}
-\hlkwd{plot3d}\hlstd{(m3,cars2010}\hlopt{$}\hlstd{EngDispl, cars2010}\hlopt{$}\hlstd{NumCyl,}
-       \hlstd{cars2010}\hlopt{$}\hlstd{FE,} \hlkwc{points} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\hlkwd{plot3d}\hlstd{(m3, cars2010}\hlopt{$}\hlstd{EngDispl, cars2010}\hlopt{$}\hlstd{NumCyl, cars2010}\hlopt{$}\hlstd{FE,}
+    \hlkwc{points} \hlstd{=} \hlnum{FALSE}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 \noindent We can also examine just the data interactively, via
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{threejs}\hlopt{::}\hlkwd{scatterplot3js}\hlstd{(cars2010}\hlopt{$}\hlstd{EngDispl, cars2010}\hlopt{$}\hlstd{NumCyl,}
-                        \hlstd{cars2010}\hlopt{$}\hlstd{FE,} \hlkwc{size}\hlstd{=}\hlnum{0.5}\hlstd{)}
+    \hlstd{cars2010}\hlopt{$}\hlstd{FE,} \hlkwc{size} \hlstd{=} \hlnum{0.5}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
 \begin{marginfigure}
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=\maxwidth]{figure/figure3-1} 
+
+{\centering \includegraphics[width=\maxwidth]{knitr_figure/practical1-figure3-1} 
+
+}
+
+
 
 \end{knitrout}
   \caption{A surface plot from a linear model of fuel economy against the number of cylinders and engine displacement including the interaction term.}
@@ -230,10 +292,11 @@ The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with vie
 
 \begin{itemize}
   \item Try fitting other variations of this model using these two predictors. For example, try adding polynomial and interaction terms
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{m4} \hlkwb{=} \hlkwd{train}\hlstd{(FE}\hlopt{~}\hlstd{EngDispl}\hlopt{*}\hlstd{NumCyl} \hlopt{+} \hlkwd{I}\hlstd{(NumCyl}\hlopt{^}\hlnum{5}\hlstd{),} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
+\hlstd{m4} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{*} \hlstd{NumCyl} \hlopt{+} \hlkwd{I}\hlstd{(NumCyl}\hlopt{^}\hlnum{5}\hlstd{),} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -248,30 +311,30 @@ The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with vie
 % Try fitting other variations of this model using these two predictors, how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface. If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
 
 \noindent One way to guage how well your model is performing is to hold out a set of observations from the training data. Then examine how well your model extends to the data that wasn't used for training. We will see more of this in coming chapters of the notes.
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{# set up a set of indicies that will be included }
-\hlcom{# in the training data}
+\hlcom{# set up a set of indicies that will be included in the}
+\hlcom{# training data}
 \hlstd{trainIndex} \hlkwb{=} \hlkwd{sample}\hlstd{(}\hlkwd{nrow}\hlstd{(cars2010),} \hlnum{900}\hlstd{)}
-\hlcom{# create two data frames, a training and a test set}
-\hlcom{# by taking subsets using this set of indicies}
-\hlcom{# here we use 900 observations to train the model}
-\hlcom{# and the rest for testing}
-\hlstd{carstrain} \hlkwb{=} \hlstd{cars2010[trainIndex,]}
-\hlstd{carstest} \hlkwb{=} \hlstd{cars2010[}\hlopt{-}\hlstd{trainIndex,]}
+\hlcom{# create two data frames, a training and a test set by}
+\hlcom{# taking subsets using this set of indicies here we use}
+\hlcom{# 900 observations to train the model and the rest for}
+\hlcom{# testing}
+\hlstd{carstrain} \hlkwb{=} \hlstd{cars2010[trainIndex, ]}
+\hlstd{carstest} \hlkwb{=} \hlstd{cars2010[}\hlopt{-}\hlstd{trainIndex, ]}
 \hlcom{# train the model and predict}
-\hlstd{mtrain} \hlkwb{=} \hlkwd{train}\hlstd{(FE}\hlopt{~}\hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl,} \hlkwc{data} \hlstd{= carstrain,}
-               \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
+\hlstd{mtrain} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl,} \hlkwc{data} \hlstd{= carstrain,}
+    \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
 \hlstd{prediction} \hlkwb{=} \hlkwd{predict}\hlstd{(mtrain, carstest)}
 
 \hlcom{# residuals of the test set}
 \hlstd{res} \hlkwb{=} \hlstd{prediction} \hlopt{-} \hlstd{carstest}\hlopt{$}\hlstd{FE}
 \hlcom{# calculate RMSE}
-\hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res}\hlopt{*}\hlstd{res))}
+\hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res} \hlopt{*} \hlstd{res))}
 \end{alltt}
 \begin{verbatim}
-## [1] 4.62
+## [1] 4.406
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -283,7 +346,7 @@ The \cc{nclRpredictive} package contains a \cc{plot3d} function to help with vie
 Try to fit the best model that you can using the \cc{cars2010} data set and the above tools. 
 I have a set of data that you haven't yet seen. Once you are happy with your model you can validate it using the \cc{validate} function in the \cc{nclRpredictive} package.
 
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{m1validated} \hlkwb{=} \hlkwd{validate}\hlstd{(}\hlkwc{model} \hlstd{= m1)}

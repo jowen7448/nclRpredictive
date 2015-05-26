@@ -8,10 +8,12 @@ results='hide';echo=FALSE
 \documentclass[a4paper,justified,openany]{tufte-handout}
 <<setup, echo=FALSE, cache=FALSE>>=
 library(knitr)
-opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+
+fname = ifelse(echo, "solutions1-", "practical1-")
+opts_chunk$set(self.contained=FALSE, tidy = TRUE, 
               cache = TRUE, size = "small", message = FALSE,
-              fig.path='knitr_figure/graphics-', 
-               cache.path='knitr_cache/graphics-', 
+              fig.path=paste0('knitr_figure/', fname), 
+               cache.path=paste0('knitr_cache/',fname), 
                fig.align='center', 
                dev='pdf', fig.width=5, fig.height=5)
 
@@ -24,7 +26,7 @@ knit_hooks$set(par=function(before, options, envir){
 
 #opts_knit$set(out.format = "latex")
 options(width=56)
-dir.create("graphics",showWarnings = FALSE)
+#dir.create("graphics",showWarnings = FALSE)
 @
 \usepackage{amsmath, booktabs}
 % Set up the images/graphics package

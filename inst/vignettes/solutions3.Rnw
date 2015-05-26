@@ -8,13 +8,13 @@ results='show';echo=TRUE
 <<setup, echo=FALSE, cache=FALSE>>=
 dir.create("graphics", showWarnings = FALSE)
 library("knitr")
-opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+fname = ifelse(echo, "solutions3-", "practical3-")
+opts_chunk$set(self.contained=FALSE, tidy = TRUE, 
               cache = TRUE, size = "small", message = FALSE,
-              fig.path='knitr_figure/graphics-', 
-               cache.path='knitr_cache/graphics-', 
+              fig.path=paste0('knitr_figure/', fname), 
+               cache.path=paste0('knitr_cache/',fname), 
                fig.align='center', 
                dev='pdf', fig.width=5, fig.height=5)
-
 knit_hooks$set(par=function(before, options, envir){
     if (before && options$fig.show!='none') {
         par(mar=c(3,3,2,1),cex.lab=.95,cex.axis=.9,
@@ -130,17 +130,17 @@ m = train(FE~., data = cars2010, method = "knn",
 boxplot(RMSE~k, data = m$resample)
 @
 <<echo = FALSE>>=
-pdf("graphics/cvresamp.pdf", width = 6,height = 4)
+pdf("graphics/p3-cvresamp.pdf", width = 6,height = 4)
 setnicepar(); mypalette(1)
 boxplot(RMSE~k, data = m$resample, xlab = "k", ylab = "RMSE", main = "15 fold cv estimates", 
         ylim=c(0, 5), col=3)
 sink = dev.off()
-system("pdfcrop graphics/cvresamp.pdf")
+system("pdfcrop graphics/p3-cvresamp.pdf && rm graphics/p3-cvresamp.pdf")
 @
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width = \textwidth]{graphics/cvresamp-crop}
+  \includegraphics[width = \textwidth]{graphics/p3-cvresamp-crop}
   \caption{$15$ fold cross validation estimates of RMSE in a $K$ nearest neighbours model against number of nearest neighbours.}
   \label{fig:cvresamp}
 \end{figure}

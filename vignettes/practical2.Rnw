@@ -2,7 +2,56 @@
 %\VignetteEngine{Sweave}
 
 
-\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage{knitr}
+\documentclass[a4paper,justified,openany]{tufte-handout}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 
 \usepackage{amsmath}
 \usepackage{graphicx}
@@ -26,7 +75,7 @@
 \section*{The \cc{OJ} data set}
 
 The \cc{OJ} data set from the \cc{ISLR} package contains information on which of two brands of orange juice customers purchased\sidenote{The response variable is \cc{Purchase}.} and can be loaded using
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{data}\hlstd{(OJ,} \hlkwc{package} \hlstd{=} \hlstr{"ISLR"}\hlstd{)}
@@ -35,7 +84,7 @@ The \cc{OJ} data set from the \cc{ISLR} package contains information on which of
 \end{knitrout}
 
 \noindent After loading the \cc{caret} and \cc{nclRpredictive} package 
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"caret"}\hlstd{)}
@@ -45,10 +94,10 @@ The \cc{OJ} data set from the \cc{ISLR} package contains information on which of
 \end{knitrout}
 
 \noindent make an initial examination of the relationships between each of the predictors and the response\sidenote{Use the \cc{plot} function with a model formula or the \cc{pairs} function.}
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{5}\hlstd{),} \hlkwc{mar}\hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{.5}\hlstd{,} \hlnum{.5}\hlstd{,} \hlnum{.5}\hlstd{))}
+\hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{5}\hlstd{),} \hlkwc{mar} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.5}\hlstd{))}
 \hlkwd{plot}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ)}
 \end{alltt}
 \end{kframe}
@@ -69,11 +118,11 @@ variables represent.}
 \section*{Visualising the boundary}
 
 The \cc{nclRpredictive} package contains following code produces a plot of the decision boundary as seen in figure~\ref{fig:purchaseboundary}.
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{boundary_plot}\hlstd{(m1,OJ}\hlopt{$}\hlstd{PriceCH, OJ}\hlopt{$}\hlstd{PriceMM, OJ}\hlopt{$}\hlstd{Purchase,}
-              \hlkwc{xlab}\hlstd{=}\hlstr{"Price CH"}\hlstd{,} \hlkwc{ylab}\hlstd{=}\hlstr{"Price MM"}\hlstd{)}
+\hlkwd{boundary_plot}\hlstd{(m1, OJ}\hlopt{$}\hlstd{PriceCH, OJ}\hlopt{$}\hlstd{PriceMM, OJ}\hlopt{$}\hlstd{Purchase,} \hlkwc{xlab} \hlstd{=} \hlstr{"Price CH"}\hlstd{,}
+    \hlkwc{ylab} \hlstd{=} \hlstr{"Price MM"}\hlstd{)}
 \end{alltt}
 
 
@@ -82,12 +131,17 @@ The \cc{nclRpredictive} package contains following code produces a plot of the d
 \noindent Run the boundary code above, and make sure you get a similar plot.
 
 \begin{marginfigure}
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 
 
 {\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in localPlotWindow(xlim, ylim, ...): formal argument "{}xlab"{} matched by multiple actual arguments}}\end{kframe}
-\includegraphics[width=\maxwidth]{figure/figure1-1} 
+
+{\centering \includegraphics[width=\maxwidth]{knitr_figure/practical2-figure1-1} 
+
+}
+
+
 
 \end{knitrout}
   \caption{Examining the decision boundary for orange juice brand purchases by price.}
@@ -109,7 +163,7 @@ The \cc{nclRpredictive} package contains following code produces a plot of the d
 
 
 \noindent We can view the most recent warning messages by using the \cc{warnings} function
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{warnings}\hlstd{()}
@@ -125,19 +179,19 @@ The \cc{nclRpredictive} package contains following code produces a plot of the d
 
 
 \noindent The help page
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlopt{?}\hlstd{ISLR}\hlopt{::}\hlstd{OJ}
+\hlkwd{`?`}\hlstd{(ISLR}\hlopt{::}\hlstd{OJ)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 \noindent gives further insight: the \cc{PriceDiff} variable is a linear combination of \cc{SalePriceMM} and \cc{SalePriceCH} so we should remove this. In addition the \cc{StoreID} and \cc{STORE} variable are different encodings of the same information so we should remove one of these too. We also have \cc{DiscCH} and \cc{DiscMM} which are the differences between \cc{PriceCH} and \cc{SalePriceCH} and \cc{PriceMM} and \cc{SalePriceMM} respectively and \cc{ListPriceDiff} is a linear combination of these prices. Removing all of these variables allows the model to be fit and all parameters to be estimated.\sidenote{This is to highlight that we need to understand what we have in our data.}
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,}\hlopt{!}\hlstd{(}\hlkwd{colnames}\hlstd{(OJ)} \hlopt{%in%} \hlkwd{c}\hlstd{(}\hlstr{"STORE"}\hlstd{,} \hlstr{"SalePriceCH"}\hlstd{,}
-           \hlstr{"SalePriceMM"}\hlstd{,}\hlstr{"PriceDiff"}\hlstd{,} \hlstr{"ListPriceDiff"}\hlstd{))]}
+\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,} \hlopt{!}\hlstd{(}\hlkwd{colnames}\hlstd{(OJ)} \hlopt{%in%} \hlkwd{c}\hlstd{(}\hlstr{"STORE"}\hlstd{,} \hlstr{"SalePriceCH"}\hlstd{,}
+    \hlstr{"SalePriceMM"}\hlstd{,} \hlstr{"PriceDiff"}\hlstd{,} \hlstr{"ListPriceDiff"}\hlstd{))]}
 \hlstd{OJsub}\hlopt{$}\hlstd{Store7} \hlkwb{=} \hlkwd{as.numeric}\hlstd{(OJsub}\hlopt{$}\hlstd{Store7)} \hlopt{-} \hlnum{1}
 \hlstd{m_log} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"glm"}\hlstd{)}
 \end{alltt}
@@ -158,16 +212,15 @@ This leads to a rank--deficient model matrix, essentially we can never find the 
 
 We could achieve the same using the \cc{caret} package function \cc{findLinearCombos}. The function takes a model matrix as an argument. We can create such a matrix using the 
 \cc{model.matrix} function with our formula object
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{remove} \hlkwb{=} \hlkwd{findLinearCombos}\hlstd{(}
-               \hlkwd{model.matrix}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ))}
+\hlstd{remove} \hlkwb{=} \hlkwd{findLinearCombos}\hlstd{(}\hlkwd{model.matrix}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ))}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 \noindent The output list has a component called \cc{remove} suggesting which variables should be removed to get rid of linear combinations
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{(badvar} \hlkwb{=} \hlkwd{colnames}\hlstd{(OJ)[remove}\hlopt{$}\hlstd{remove])}
@@ -193,9 +246,14 @@ We could achieve the same using the \cc{caret} package function \cc{findLinearCo
 \section*{ROC curves}
 
 \begin{marginfigure}
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=\maxwidth]{figure/figure2-1} 
+
+{\centering \includegraphics[width=\maxwidth]{knitr_figure/practical2-figure2-1} 
+
+}
+
+
 
 \end{knitrout}
   \caption{An example of a ROC curve for the logistic regression classifier. We can overlay ROC curves by adding the \cc{add = TRUE} argument.}
@@ -205,7 +263,7 @@ We could achieve the same using the \cc{caret} package function \cc{findLinearCo
 If we were interested in the area under the ROC curve, we could retrain the model using the \cc{twoClassSummary} function as an argument to a train control object. Alternatively we can
 use the \cc{pROC} package
 
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"pROC"}\hlstd{)}
@@ -215,14 +273,15 @@ use the \cc{pROC} package
 
 \noindent This also allows us to view the ROC curve, via
 
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{curve} \hlkwb{=} \hlkwd{roc}\hlstd{(}\hlkwc{response} \hlstd{= OJsub}\hlopt{$}\hlstd{Purchase,}
-  \hlkwc{predictor} \hlstd{=} \hlkwd{predict}\hlstd{(m_log,} \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)[,}\hlstr{"CH"}\hlstd{])}
+\hlstd{curve} \hlkwb{=} \hlkwd{roc}\hlstd{(}\hlkwc{response} \hlstd{= OJsub}\hlopt{$}\hlstd{Purchase,} \hlkwc{predictor} \hlstd{=} \hlkwd{predict}\hlstd{(m_log,}
+    \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)[,} \hlstr{"CH"}\hlstd{])}
 \hlcom{## this makes CH the event of interest}
 \hlkwd{plot}\hlstd{(curve,} \hlkwc{legacy.axes} \hlstd{=} \hlnum{TRUE}\hlstd{)}
 \hlkwd{auc}\hlstd{(curve)}
+\hlnum{NA}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -255,7 +314,7 @@ use the \cc{pROC} package
 \section*{An example with more than two classes}
 
 The \cc{Glass} data set in the \cc{mlbench} package is a data frame containing examples of the chemical analysis of $7$ different types of glass. The goal is to be able to predict which category glass falls into based on the values of the $9$ predictors.
-\begin{knitrout}
+\begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{data}\hlstd{(Glass,} \hlkwc{package} \hlstd{=} \hlstr{"mlbench"}\hlstd{)}

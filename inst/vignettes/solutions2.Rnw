@@ -8,10 +8,11 @@ results='show';echo=TRUE
 <<setup, echo=FALSE, cache=FALSE>>=
 dir.create("graphics", showWarnings = FALSE)
 library("knitr")
-opts_knit$set(self.contained=FALSE, tidy = TRUE, 
+fname = ifelse(echo, "solutions2-", "practical2-")
+opts_chunk$set(self.contained=FALSE, tidy = TRUE, 
               cache = TRUE, size = "small", message = FALSE,
-              fig.path='knitr_figure/graphics-', 
-               cache.path='knitr_cache/graphics-', 
+              fig.path=paste0('knitr_figure/', fname), 
+               cache.path=paste0('knitr_cache/',fname), 
                fig.align='center', 
                dev='pdf', fig.width=5, fig.height=5)
 
