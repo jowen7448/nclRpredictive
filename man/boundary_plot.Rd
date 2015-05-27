@@ -4,7 +4,8 @@
 \alias{boundary_plot}
 \title{Convience function for creating boundary plots}
 \usage{
-boundary_plot(model, x, y, z, ...)
+boundary_plot(model, x, y, z, xlab = all.vars(formula(model))[2],
+  ylab = all.vars(formula(model))[3], levels = 0.5, lwd = 2, ...)
 }
 \arguments{
 \item{model}{A caret classification model}
@@ -14,6 +15,14 @@ boundary_plot(model, x, y, z, ...)
 \item{y}{Data}
 
 \item{z}{Observed values}
+
+\item{xlab}{X-axis label}
+
+\item{ylab}{Y-axis label}
+
+\item{levels}{contour levels, default prob=0.5}
+
+\item{lwd}{Line width of the contour plot}
 
 \item{...}{Additional arguments passed to the contour function}
 }
