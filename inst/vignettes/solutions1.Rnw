@@ -253,16 +253,16 @@ m4 = train(FE~EngDispl*NumCyl + I(NumCyl^5),
            data = cars2010, method = "lm")
 @
 
-  
-  
-  
-  how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface.
+How is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface.
   \item If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
 \end{itemize}
 
 % Try fitting other variations of this model using these two predictors, how is prediction affected in each case? Don't forget to examine residuals, R squared values and the predictive surface. If you want to add an interaction term you can do so with the \cc{:} operator, how does the interaction affect the surface?
 
-\noindent One way to guage how well your model is performing is to hold out a set of observations from the training data. Then examine how well your model extends to the data that wasn't used for training. We will see more of this in coming chapters of the notes.
+
+\section*{In the spirit of competition \ldots}
+
+One way to guage how well your model is performing is to hold out a set of observations from the training data. Then examine how well your model extends to the data that wasn't used for training.\sidenote{We will look at this idea in detail in the next chapter.}
 <<>>=
 # set up a set of indicies that will be included 
 # in the training data
@@ -286,8 +286,6 @@ sqrt(mean(res*res))
 
 \noindent Having a small value here indicates that my model does a good job of predicting for observations that weren't used to train the model.
 
-\section*{In the spirit of competition \ldots}
-
 Try to fit the best model that you can using the \cc{cars2010} data set and the above tools. 
 I have a set of data that you haven't yet seen. Once you are happy with your model you can validate it using the \cc{validate} function in the \cc{nclRpredictive} package.
 
@@ -302,7 +300,7 @@ A couple of other data sets that can be used to try fitting linear regression mo
   \centering
   \begin{tabular}{@{} lll @{}}
   \toprule
-  data set & Package & Response \\
+  Data set & Package & Response \\
   \midrule
   diamonds & ggplot2 & price \\
   Wage & ISLR & wage \\

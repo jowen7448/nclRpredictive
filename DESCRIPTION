@@ -18,6 +18,6 @@ Imports: caret,
   elasticnet, pls, lars,
   gam, ipred, randomForest, gbm,
   kernlab, e1071, ggplot2, threejs
-Suggests: knitr
+Suggests: knitr, shiny
 VignetteBuilder: knitr
 LazyData: true
