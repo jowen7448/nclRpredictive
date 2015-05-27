@@ -1,7 +1,7 @@
 Package: nclRpredictive
 Type: Package
 Title: Predictive Analytics
-Version: 1.1.0
+Version: 1.1.1
 Date: 2015-05-27
 Authors@R: c(
   person("Jamie", "Owen", email="jamie.owen@ncl.ac.uk", role =c("aut")),

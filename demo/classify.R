@@ -10,7 +10,7 @@ server = function(input,output){
   slider= reactive({
     if(input$method == "knn")
       sliderInput("k","# Nearest Neighoburs",
-                  min = 1, max = 30,step = 1,value = 10)
+                  min = 1, max = 30, step = 2,value = 10)
   })
   
   output$slider = renderUI({
@@ -26,7 +26,7 @@ server = function(input,output){
           trControl = trainControl(method = "none"), preProcess = c("center","scale"))
   })
   output$plot = renderPlot({
-    nclRpredictive::boundary_plot(modelfit(),dd$x,dd$z,df$y)
+    nclRpredictive::boundary_plot(modelfit(),dd$x,dd$z,df$y, lwd=5)
   })
   
   
