@@ -26,7 +26,7 @@ server = function(input,output){
           trControl = trainControl(method = "none"), preProcess = c("center","scale"))
   })
   output$plot = renderPlot({
-    nclRpredictive::boundary_plot(modelfit(),dd$x,dd$z,df$y, lwd=5)
+    nclRpredictive::boundary_plot(modelfit(),df$x,df$z,df$y, lwd=5,jitter=FALSE)
   })
   
   
