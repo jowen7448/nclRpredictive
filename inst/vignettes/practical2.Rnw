@@ -44,9 +44,111 @@ opts_knit$set(out.format = "latex")
 <<echo = echo, message = FALSE>>=
 library("caret")
 data(FuelEconomy, package = "AppliedPredictiveModeling")
-set.seed(1)
+set.seed(25)
 @
 
+\section*{Cross validation and the bootstrap}
+\begin{itemize}
+\item Fit a linear regression model to the \cc{cars2010} data set with \cc{FE} as the response, using \cc{EngDispl}, \cc{NumCyl} and \cc{NumGears} as predictors.\marginnote{The data set can be loaded \cc{data("FuelEconomy", package = "AppliedPredictiveModeling")}.}
+<<echo=echo>>=
+mLM = train(FE~EngDispl+NumCyl+NumGears, method = "lm", data = cars2010)
+@
+\item What is the training error rate (RMSE) for this model?\marginnote{Hint: The training error can be found by taking the square root of the average square residuals. The \cc{sqrt} and \cc{resid} functions may be useful.}
+<<echo=echo, results=results>>=
+res = resid(mLM)
+(trainRMSE = sqrt(mean(res*res)))
+@
+\item Re--train your model using the validation set approach to estimate a test RMSE, make your validation set equivalent to a half of the full available data.
+<<echo = echo, results=results>>=
+## pick an index for samples
+## floor just rounds down so we only try to sample a
+## whole number
+index = sample(nrow(cars2010),floor(nrow(cars2010)/2))
+## set up a train control object
+tcVS = trainControl(method = "cv", index = list(
+    Fold1 = (1:nrow(cars2010))[-index]))
+## train the model
+mLMVS = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tcVS)
+@
+\item How does this compare to the training error that we estimated above?
+<<echo = echo, results=results>>=
+# it's larger, often training error under estimates test error
+getTrainPerf(mLMVS)
+trainRMSE
+@
+\item Go through the same process using the different methods for estimating test error. That is leave one out and k--fold crossvalidation as well as bootstrapping.\marginnote{10--fold cross validation can be shown to be a good choice for almost any situation.}
+<<echo = echo, results=results>>=
+# set up train control objects
+tcLOOCV = trainControl(method = "LOOCV")
+tcKFOLD = trainControl(method = "cv", number = 10)
+tcBOOT = trainControl(method = "boot")
+
+# train the model
+mLMLOOCV = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tcLOOCV)
+mLMKFOLD = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tcKFOLD)
+mLMBOOT = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tcBOOT)
+@
+\item How do these estimates compare with the validation set approach?
+<<echo = echo, results=results>>=
+getTrainPerf(mLMVS)
+getTrainPerf(mLMLOOCV)
+getTrainPerf(mLMKFOLD)
+getTrainPerf(mLMBOOT)
+# all lower than validation set, we mentioned it tended to
+# over estimate test error
+@
+\item The object returned by \cc{train} also contains timing information that can be accessed via the \cc{times} component of the list.\marginnote{The \cc{\$} notation can be used pick a single list component.}Which of the methods is fastest?
+<<echo = echo, results=results>>=
+mLMVS$times$everything
+mLMLOOCV$times$everything
+mLMKFOLD$times$everything
+mLMBOOT$times$everything
+@ 
+\item Using k--fold cross validation to estimate test error investigate how the number of folds effects the resultant estimates and computation time.
+<<echo = echo, results=results>>=
+# a number of trainControl objects 
+tc2 = trainControl(method = "cv", number = 2)
+tc5 = trainControl(method = "cv", number = 5)
+tc10 = trainControl(method = "cv", number = 10)
+tc15 = trainControl(method = "cv", number = 15)
+tc20 = trainControl(method = "cv", number = 20)
+# train the model using each
+mLM2 = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tc2)
+mLM5 = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tc5)
+mLM10 = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tc10)
+mLM15 = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tc15)
+mLM20 = train(FE~EngDispl+NumCyl+NumGears, method = "lm",
+    data = cars2010, trControl = tc20)
+# use a data frame to store all of the relevant information
+(info = data.frame("Folds" = c(2,5,10,15,20),
+    "Time" = c(mLM2$times$everything[1],
+        mLM5$times$everything[1],
+        mLM10$times$everything[1],
+        mLM15$times$everything[1],
+        mLM20$times$everything[1]),
+    "Estimate" = c(mLM2$results$RMSE,
+                   mLM5$results$RMSE,
+                   mLM10$results$RMSE,
+                   mLM15$results$RMSE,
+                   mLM20$results$RMSE)))
+# as there are more folds it takes longer to compute,
+# not an issue with such a small model but something
+# to consider on more complicated models.
+# Estimates are going down as the number of folds increases.
+# This is because for each held out fold we are using a greater
+# proportion of the data in training so expect to get a better
+# model.
+@
+\item Experiment with adding terms to the model, transformations of the predictors and interactions say and use cross validation to estimate test error for each. What is the best model you can find? You can still use the \cc{validate} and \cc{mark} functions to look at how your models fair on the unseen data. 
+\end{itemize}
 
 \section*{Penalised regression}
 
@@ -65,6 +167,7 @@ The \cc{diabetes} data set in the \cc{lars} package contains measurements of a n
 % @
 
 <<cache=TRUE>>=
+## load the data in 
 data(diabetes, package = "lars")
 diabetesdata = cbind(diabetes$x,"y" = diabetes$y)
 @
@@ -73,9 +176,9 @@ diabetesdata = cbind(diabetes$x,"y" = diabetes$y)
 \begin{itemize}
 \item Try fitting a lasso, ridge and elastic net model using all of the main effects, pairwise interactions and square terms from each of the predictors.\sidenote{Hint: see notes for shortcut on creating model formula. Also be aware that if the predictor is a factor a polynomial term doesn't make sense}
 <<echo=echo, results=results, cache=TRUE, tidy=TRUE, warning=FALSE, message=FALSE, eval=echo>>=
-## load the data in 
 modelformula = as.formula(paste("y~(.)^2 + ",
-    paste0("I(",colnames(diabetesdata),"^2)", 
+    paste0("I(",
+           colnames(diabetesdata),"^2)", 
           collapse = "+")
     ))
 mLASSO = train(modelformula, data = diabetesdata,
@@ -105,23 +208,29 @@ is short hand for a model that includes pairwise interactions for each predictor
 
   \item Try to narrow in on the region of lowest RMSE for each model, don't forget about the \cc{tuneGrid} argument to the train function.
 <<echo=echo, results=results, cache=TRUE, warning=FALSE, eval=echo, message=FALSE>>=
-# examine previous output then train over a finer grid near the better end
+# examine previous output then train over a finer grid near 
+# the better end
 mLASSOfine = train(modelformula,data = diabetesdata,
     method = "lasso", tuneGrid = data.frame(fraction = seq(0.1,0.5,by = 0.05)))
 mLASSOfine$results
 # best still right down at the 0.1 end
 mLASSOfiner = train(modelformula,data = diabetesdata,
-    method = "lasso", tuneGrid = data.frame(fraction = seq(0.01,0.15,by = 0.01)))
+    method = "lasso", 
+    tuneGrid = data.frame(fraction = seq(0.01,0.15,by = 0.01)))
 mLASSOfiner$results
-# 0.09 seems the best
+# best is
+mLASSOfiner$bestTune
 
 mRIDGEfine = train(modelformula,data = diabetesdata,
-    method = "ridge", tuneGrid = data.frame(lambda = seq(0,0.1,by = 0.01)))
+    method = "ridge", 
+    tuneGrid = data.frame(lambda = seq(0,0.1,by = 0.01)))
 mRIDGEfine$results
 mRIDGEfiner = train(modelformula,data = diabetesdata,
-    method = "ridge", tuneGrid = data.frame(lambda = seq(0.005,0.03,by = 0.001)))
+    method = "ridge", 
+    tuneGrid = data.frame(lambda = seq(0.005,0.03,by = 0.001)))
 mRIDGEfiner$results
-# 0.023 seems best
+# the best one
+mRIDGEfiner$bestTune
 
 mENETfine = train(modelformula, data = diabetesdata, 
     method = "enet", tuneGrid = expand.grid(
@@ -135,13 +244,13 @@ mENETfiner = train(modelformula, data = diabetesdata,
                          lambda = seq(0.001,0.1,length.out = 10),
                          fraction = 0.5))
 mENETfiner$results
-# 0.012, 0.5 best
+mENETfiner$bestTune
 @ 
 \noindent We can view what the coefficients will be by using
 <<eval = FALSE>>=
-coef = predict(m.lasso$finalModel,
+coef = predict(mLASSO$finalModel,
         mode = "fraction",
-        s = 0.1,# which ever fraction was chosen as best
+        s = mLASSO$bestTune$fraction,# which ever fraction was chosen as best
         type = "coefficients"
 )
 @
@@ -151,11 +260,11 @@ coef = predict(m.lasso$finalModel,
 <<echo=echo, results=results, cache=TRUE, eval=echo>>=
 # use predict to find the coefficients
 coefLASSO = predict(mLASSOfiner$finalModel, mode = "fraction", 
-        type = "coefficient", s = 0.09
+        type = "coefficient", s = mLASSO$bestTune$fraction,
         )
 sum(coefLASSO$coefficients != 0)
 coefENET= predict(mENETfiner$finalModel, mode = "fraction", 
-        type = "coefficient", s = 0.5
+        type = "coefficient", s = mENET$bestTune$fraction
         )
 sum(coefENET$coefficients != 0)
 @ 
@@ -175,82 +284,6 @@ getTrainPerf(mPLS2)
 #The elastic net model has the lowest estimated test error, all are fairly similar. The elastic net model suggests only 21 non--zero
 #coefficients out of all of those included in the model.
 @
-\end{itemize}
-
-
-
-\section*{Advanced}
-
-\marginnote{This section is intended for users who have a more in depth background to R programming. Attendance to the Programming in R course should be adequate background.}
-
-So far we have only used default functions and metrics to compare the performance of models, however we are not restricted to doing this. For example, training of classification models is typically more difficult when there is an imbalance in the two classes in the training set. Models trained from such data typically have high specificity but poor sensitivity or vice versa. Instead of training to maximise accuracy using data from the training set we could try to maximise according to some other criteria, namely sensitivity and specificity being as close to perfect as possible $(1, 1)$.
-
-To add our function we need to make sure we mirror the structure of those included in caret already.\marginnote{We can view a functions code by typing its name with no brackets.} The following code creates a new function that could be used to summarise a model
-<<>>=
-fourStats = function (data, lev = NULL, model = NULL) {
-  # This code will use the area under the ROC curve and the
-  # sensitivity and specificity values from the built in 
-  # twoClassSummary function
-  out = twoClassSummary(data, lev = levels(data$obs), 
-                        model = NULL)
-  # The best possible model has sensitivity of 1 and 
-  # specifity of 1. How far are we from that value?
-  coords = matrix(c(1, 1, out["Spec"], out["Sens"]), 
-                   ncol = 2, 
-                   byrow = TRUE)
-  # return the disctance measure together with the 
-  # output from two class summary
-  c(Dist = dist(coords)[1], out)
-}
-@
-\noindent we could then use this in the \cc{train} function
-<<>>=
-data(Sonar, package = "mlbench")
-mod = train(Class ~ ., data = Sonar,
-              method = "knn",
-              # Minimize the distance to the perfect model
-              metric = "Dist",
-              maximize = FALSE,
-              tuneLength = 20,
-              trControl = 
-    trainControl(method = "cv", classProbs = TRUE,
-                     summaryFunction = fourStats))
-@
-
-\noindent The \cc{plot} function 
-
-<<figure2, eval=FALSE>>=
-plot(mod)
-@
-
-\begin{marginfigure}
-\centering
-<<figure2, echo=FALSE>>=
-@
-  \caption{Plot of the distance from a perfect classifier measured by sensitivity and specificity against tuning parameter for a $k$ nearest neighbour model.}
-  \label{fig:newsummary}
-\end{marginfigure}
-
-\noindent will then show the profile of the resampling estimates of our chosen statistic against the tuning parameters, see figure~\ref{fig:newsummary}.
-
-\begin{itemize}
-  \item Have a go at writing a function that will allow a regression model to be chosen by the absolute value of the largest residual and try using it to fit a couple of models.
-<<echo=echo, results=results, cache=TRUE, tidy=TRUE, eval=echo, message=FALSE>>=
-maxabsres = function(data, lev = NULL, model = NULL){
-    m = max(abs(data$obs - data$pred))
-    return(c("Max" = m))
-}
-# Test with pls regression
-tccustom = trainControl(method = "cv",
-                     summaryFunction = maxabsres)
-mPLScustom = train(FE~., data = cars2010, 
-                   method = "pls",
-               tuneGrid = data.frame(ncomp = 1:6),
-               trControl = tccustom,
-               metric = "Max", maximize = FALSE)
-# success
-# not to suggest this is a good choice of metric
-@ 
 \end{itemize}
 
 \end{document}
