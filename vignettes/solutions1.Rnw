@@ -430,7 +430,7 @@ One way to guage how well your model is performing is to hold out a set of obser
 \hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res} \hlopt{*} \hlstd{res))}
 \end{alltt}
 \begin{verbatim}
-## [1] 4.651
+## [1] 4.206
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

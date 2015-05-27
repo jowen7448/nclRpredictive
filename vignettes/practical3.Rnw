@@ -385,4 +385,84 @@ The \cc{Glass} data set in the \cc{mlbench} package is a data frame containing e
 
 \noindent A logistic regression model is typically not suitable for more than $2$ classes, so try fitting the other models using a training set that consists of 90\% of the available data.\marginnote{The function \cc{createDataPartition} can be used here, see notes for a reminder.}
 
+
+\section*{Advanced}
+
+\marginnote{This section is intended for users who have a more in depth background to R programming. Attendance to the Programming in R course should be adequate background.}
+
+So far we have only used default functions and metrics to compare the performance of models, however we are not restricted to doing this. For example, training of classification models is typically more difficult when there is an imbalance in the two classes in the training set. Models trained from such data typically have high specificity but poor sensitivity or vice versa. Instead of training to maximise accuracy using data from the training set we could try to maximise according to some other criteria, namely sensitivity and specificity being as close to perfect as possible $(1, 1)$.
+
+To add our function we need to make sure we mirror the structure of those included in caret already.\marginnote{We can view a functions code by typing its name with no brackets.} The following code creates a new function that could be used to summarise a model
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fourStats} \hlkwb{=} \hlkwa{function}\hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{lev} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{) \{}
+    \hlcom{# This code will use the area under the ROC curve and the}
+    \hlcom{# sensitivity and specificity values from the built in}
+    \hlcom{# twoClassSummary function}
+    \hlstd{out} \hlkwb{=} \hlkwd{twoClassSummary}\hlstd{(data,} \hlkwc{lev} \hlstd{=} \hlkwd{levels}\hlstd{(data}\hlopt{$}\hlstd{obs),} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{)}
+    \hlcom{# The best possible model has sensitivity of 1 and}
+    \hlcom{# specifity of 1. How far are we from that value?}
+    \hlstd{coords} \hlkwb{=} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{, out[}\hlstr{"Spec"}\hlstd{], out[}\hlstr{"Sens"}\hlstd{]),} \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{,}
+        \hlkwc{byrow} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+    \hlcom{# return the disctance measure together with the output}
+    \hlcom{# from two class summary}
+    \hlkwd{c}\hlstd{(}\hlkwc{Dist} \hlstd{=} \hlkwd{dist}\hlstd{(coords)[}\hlnum{1}\hlstd{], out)}
+\hlstd{\}}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\noindent we could then use this in the \cc{train} function
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(Sonar,} \hlkwc{package} \hlstd{=} \hlstr{"mlbench"}\hlstd{)}
+\hlstd{mod} \hlkwb{=} \hlkwd{train}\hlstd{(Class} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= Sonar,}
+              \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{,}
+              \hlcom{# Minimize the distance to the perfect model}
+              \hlkwc{metric} \hlstd{=} \hlstr{"Dist"}\hlstd{,}
+              \hlkwc{maximize} \hlstd{=} \hlnum{FALSE}\hlstd{,}
+              \hlkwc{tuneLength} \hlstd{=} \hlnum{20}\hlstd{,}
+              \hlkwc{trControl} \hlstd{=}
+    \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{classProbs} \hlstd{=} \hlnum{TRUE}\hlstd{,}
+                     \hlkwc{summaryFunction} \hlstd{= fourStats))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\noindent The \cc{plot} function 
+
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(mod)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{marginfigure}
+\centering
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{knitr_figure/practical2-figure3-1} 
+
+}
+
+
+
+\end{knitrout}
+  \caption{Plot of the distance from a perfect classifier measured by sensitivity and specificity against tuning parameter for a $k$ nearest neighbour model.}
+  \label{fig:newsummary}
+\end{marginfigure}
+
+\noindent will then show the profile of the resampling estimates of our chosen statistic against the tuning parameters, see figure~\ref{fig:newsummary}.
+
+\begin{itemize}
+  \item Have a go at writing a function that will allow a regression model to be chosen by the absolute value of the largest residual and try using it to fit a couple of models.
+
+
+\end{itemize}
+
+
 \end{document}

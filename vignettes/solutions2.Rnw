@@ -77,11 +77,202 @@
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"caret"}\hlstd{)}
 \hlkwd{data}\hlstd{(FuelEconomy,} \hlkwc{package} \hlstd{=} \hlstr{"AppliedPredictiveModeling"}\hlstd{)}
-\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlstd{)}
+\hlkwd{set.seed}\hlstd{(}\hlnum{25}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
+\section*{Cross validation and the bootstrap}
+\begin{itemize}
+\item Fit a linear regression model to the \cc{cars2010} data set with \cc{FE} as the response, using \cc{EngDispl}, \cc{NumCyl} and \cc{NumGears} as predictors.\marginnote{The data set can be loaded \cc{data("FuelEconomy", package = "AppliedPredictiveModeling")}.}
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{mLM} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\item What is the training error rate (RMSE) for this model?\marginnote{Hint: The training error can be found by taking the square root of the average square residuals. The \cc{sqrt} and \cc{resid} functions may be useful.}
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{res} \hlkwb{=} \hlkwd{resid}\hlstd{(mLM)}
+\hlstd{(trainRMSE} \hlkwb{=} \hlkwd{sqrt}\hlstd{(}\hlkwd{mean}\hlstd{(res} \hlopt{*} \hlstd{res)))}
+\end{alltt}
+\begin{verbatim}
+## [1] 4.59
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+\item Re--train your model using the validation set approach to estimate a test RMSE, make your validation set equivalent to a half of the full available data.
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## pick an index for samples floor just rounds down so we only try to sample}
+\hlcom{## a whole number}
+\hlstd{index} \hlkwb{=} \hlkwd{sample}\hlstd{(}\hlkwd{nrow}\hlstd{(cars2010),} \hlkwd{floor}\hlstd{(}\hlkwd{nrow}\hlstd{(cars2010)}\hlopt{/}\hlnum{2}\hlstd{))}
+\hlcom{## set up a train control object}
+\hlstd{tcVS} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{index} \hlstd{=} \hlkwd{list}\hlstd{(}\hlkwc{Fold1} \hlstd{= (}\hlnum{1}\hlopt{:}\hlkwd{nrow}\hlstd{(cars2010))[}\hlopt{-}\hlstd{index]))}
+\hlcom{## train the model}
+\hlstd{mLMVS} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tcVS)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\item How does this compare to the training error that we estimated above?
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# it's larger, often training error under estimates test error}
+\hlkwd{getTrainPerf}\hlstd{(mLMVS)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     4.847         0.616     lm
+\end{verbatim}
+\begin{alltt}
+\hlstd{trainRMSE}
+\end{alltt}
+\begin{verbatim}
+## [1] 4.59
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+\item Go through the same process using the different methods for estimating test error. That is leave one out and $k$--fold crossvalidation as well as bootstrapping.\marginnote{$10$--fold cross validation can be shown to be a good choice for almost any situation.}
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# set up train control objects}
+\hlstd{tcLOOCV} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"LOOCV"}\hlstd{)}
+\hlstd{tcKFOLD} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{number} \hlstd{=} \hlnum{10}\hlstd{)}
+\hlstd{tcBOOT} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"boot"}\hlstd{)}
+
+\hlcom{# train the model}
+\hlstd{mLMLOOCV} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tcLOOCV)}
+\hlstd{mLMKFOLD} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tcKFOLD)}
+\hlstd{mLMBOOT} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tcBOOT)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\item How do these estimates compare with the validation set approach?
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{getTrainPerf}\hlstd{(mLMVS)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     4.847         0.616     lm
+\end{verbatim}
+\begin{alltt}
+\hlkwd{getTrainPerf}\hlstd{(mLMLOOCV)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     4.612        0.6214     lm
+\end{verbatim}
+\begin{alltt}
+\hlkwd{getTrainPerf}\hlstd{(mLMKFOLD)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     4.585        0.6315     lm
+\end{verbatim}
+\begin{alltt}
+\hlkwd{getTrainPerf}\hlstd{(mLMBOOT)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     4.567        0.6326     lm
+\end{verbatim}
+\begin{alltt}
+\hlcom{# all lower than validation set, we mentioned it tended to over estimate}
+\hlcom{# test error}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\item The object returned by \cc{train} also contains timing information that can be accessed via the \cc{times} component of the list.\marginnote{The \cc{\$} notation can be used pick a single list component.} Which of the methods is fastest?
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{mLMVS}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything}
+\end{alltt}
+\begin{verbatim}
+##    user  system elapsed 
+##   0.244   0.000   0.247
+\end{verbatim}
+\begin{alltt}
+\hlstd{mLMLOOCV}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything}
+\end{alltt}
+\begin{verbatim}
+##    user  system elapsed 
+##   4.796   0.008   4.823
+\end{verbatim}
+\begin{alltt}
+\hlstd{mLMKFOLD}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything}
+\end{alltt}
+\begin{verbatim}
+##    user  system elapsed 
+##   0.280   0.004   0.283
+\end{verbatim}
+\begin{alltt}
+\hlstd{mLMBOOT}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything}
+\end{alltt}
+\begin{verbatim}
+##    user  system elapsed 
+##   0.344   0.004   0.350
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+\item Using k--fold cross validation to estimate test error investigate how the number of folds effects the resultant estimates and computation time.
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# a number of trainControl objects}
+\hlstd{tc2} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{number} \hlstd{=} \hlnum{2}\hlstd{)}
+\hlstd{tc5} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{number} \hlstd{=} \hlnum{5}\hlstd{)}
+\hlstd{tc10} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{number} \hlstd{=} \hlnum{10}\hlstd{)}
+\hlstd{tc15} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{number} \hlstd{=} \hlnum{15}\hlstd{)}
+\hlstd{tc20} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{number} \hlstd{=} \hlnum{20}\hlstd{)}
+\hlcom{# train the model using each}
+\hlstd{mLM2} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tc2)}
+\hlstd{mLM5} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tc5)}
+\hlstd{mLM10} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tc10)}
+\hlstd{mLM15} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tc15)}
+\hlstd{mLM20} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{EngDispl} \hlopt{+} \hlstd{NumCyl} \hlopt{+} \hlstd{NumGears,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{data} \hlstd{= cars2010,}
+    \hlkwc{trControl} \hlstd{= tc20)}
+\hlcom{# use a data frame to store all of the relevant information}
+\hlstd{(info} \hlkwb{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{Folds} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{5}\hlstd{,} \hlnum{10}\hlstd{,} \hlnum{15}\hlstd{,} \hlnum{20}\hlstd{),} \hlkwc{Time} \hlstd{=} \hlkwd{c}\hlstd{(mLM2}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything[}\hlnum{1}\hlstd{],}
+    \hlstd{mLM5}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything[}\hlnum{1}\hlstd{], mLM10}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything[}\hlnum{1}\hlstd{], mLM15}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything[}\hlnum{1}\hlstd{],}
+    \hlstd{mLM20}\hlopt{$}\hlstd{times}\hlopt{$}\hlstd{everything[}\hlnum{1}\hlstd{]),} \hlkwc{Estimate} \hlstd{=} \hlkwd{c}\hlstd{(mLM2}\hlopt{$}\hlstd{results}\hlopt{$}\hlstd{RMSE, mLM5}\hlopt{$}\hlstd{results}\hlopt{$}\hlstd{RMSE,}
+    \hlstd{mLM10}\hlopt{$}\hlstd{results}\hlopt{$}\hlstd{RMSE, mLM15}\hlopt{$}\hlstd{results}\hlopt{$}\hlstd{RMSE, mLM20}\hlopt{$}\hlstd{results}\hlopt{$}\hlstd{RMSE)))}
+\end{alltt}
+\begin{verbatim}
+##   Folds  Time Estimate
+## 1     2 0.264    4.595
+## 2     5 0.260    4.597
+## 3    10 0.280    4.604
+## 4    15 0.300    4.583
+## 5    20 0.316    4.551
+\end{verbatim}
+\begin{alltt}
+\hlcom{# as there are more folds it takes longer to compute, not an issue with such}
+\hlcom{# a small model but something to consider on more complicated models.}
+\hlcom{# Estimates are going down as the number of folds increases.  This is}
+\hlcom{# because for each held out fold we are using a greater proportion of the}
+\hlcom{# data in training so expect to get a better model.}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\item Experiment with adding terms to the model, transformations of the predictors and interactions say and use cross validation to estimate test error for each. What is the best model you can find? You can still use the \cc{validate} and \cc{mark} functions to look at how your models fair on the unseen data. 
+\end{itemize}
 
 \section*{Penalised regression}
 
@@ -102,6 +293,7 @@ The \cc{diabetes} data set in the \cc{lars} package contains measurements of a n
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
+\hlcom{## load the data in}
 \hlkwd{data}\hlstd{(diabetes,} \hlkwc{package} \hlstd{=} \hlstr{"lars"}\hlstd{)}
 \hlstd{diabetesdata} \hlkwb{=} \hlkwd{cbind}\hlstd{(diabetes}\hlopt{$}\hlstd{x,} \hlkwc{y} \hlstd{= diabetes}\hlopt{$}\hlstd{y)}
 \end{alltt}
@@ -114,7 +306,6 @@ The \cc{diabetes} data set in the \cc{lars} package contains measurements of a n
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{## load the data in}
 \hlstd{modelformula} \hlkwb{=} \hlkwd{as.formula}\hlstd{(}\hlkwd{paste}\hlstd{(}\hlstr{"y~(.)^2 + "}\hlstd{,} \hlkwd{paste0}\hlstd{(}\hlstr{"I("}\hlstd{,} \hlkwd{colnames}\hlstd{(diabetesdata),}
     \hlstr{"^2)"}\hlstd{,} \hlkwc{collapse} \hlstd{=} \hlstr{"+"}\hlstd{)))}
 \hlstd{mLASSO} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"lasso"}\hlstd{)}
@@ -152,15 +343,15 @@ is short hand for a model that includes pairwise interactions for each predictor
 \end{alltt}
 \begin{verbatim}
 ##   fraction  RMSE Rsquared RMSESD RsquaredSD
-## 1     0.10 17.48   0.9498  1.199   0.007721
-## 2     0.15 17.88   0.9475  1.460   0.009881
-## 3     0.20 18.19   0.9456  1.704   0.011844
-## 4     0.25 18.36   0.9445  1.855   0.012976
-## 5     0.30 18.50   0.9437  1.968   0.013817
-## 6     0.35 18.58   0.9432  1.999   0.014093
-## 7     0.40 18.62   0.9429  2.035   0.014408
-## 8     0.45 18.66   0.9427  2.075   0.014785
-## 9     0.50 18.69   0.9425  2.086   0.014922
+## 1     0.10 16.88   0.9531  1.198   0.005822
+## 2     0.15 17.06   0.9513  1.371   0.006878
+## 3     0.20 17.36   0.9496  1.456   0.007611
+## 4     0.25 17.47   0.9490  1.422   0.007500
+## 5     0.30 17.56   0.9485  1.415   0.007553
+## 6     0.35 17.63   0.9481  1.423   0.007681
+## 7     0.40 17.70   0.9477  1.418   0.007710
+## 8     0.45 17.75   0.9474  1.413   0.007728
+## 9     0.50 17.80   0.9472  1.413   0.007802
 \end{verbatim}
 \begin{alltt}
 \hlcom{# best still right down at the 0.1 end}
@@ -169,43 +360,49 @@ is short hand for a model that includes pairwise interactions for each predictor
 \hlstd{mLASSOfiner}\hlopt{$}\hlstd{results}
 \end{alltt}
 \begin{verbatim}
-##    fraction  RMSE Rsquared  RMSESD RsquaredSD
-## 1      0.01 39.67   0.9562 19.6313   0.005303
-## 2      0.02 26.91   0.9549 15.2340   0.004879
-## 3      0.03 22.03   0.9546 10.9004   0.005734
-## 4      0.04 19.57   0.9534  7.7419   0.006264
-## 5      0.05 18.36   0.9528  5.6974   0.006430
-## 6      0.06 17.85   0.9520  4.1728   0.006489
-## 7      0.07 17.61   0.9514  2.9337   0.006431
-## 8      0.08 17.48   0.9508  1.8775   0.006491
-## 9      0.09 17.39   0.9502  1.1800   0.006490
-## 10     0.10 17.37   0.9498  0.9972   0.006489
-## 11     0.11 17.41   0.9496  1.0084   0.006611
-## 12     0.12 17.47   0.9493  1.0294   0.006780
-## 13     0.13 17.53   0.9490  1.0602   0.006985
-## 14     0.14 17.59   0.9487  1.0933   0.007181
-## 15     0.15 17.65   0.9485  1.1266   0.007329
+##    fraction  RMSE Rsquared RMSESD RsquaredSD
+## 1      0.01 53.80   0.9541 14.736   0.003887
+## 2      0.02 38.43   0.9546 18.834   0.004405
+## 3      0.03 30.59   0.9545 17.109   0.005125
+## 4      0.04 25.97   0.9540 14.843   0.005017
+## 5      0.05 23.24   0.9540 12.779   0.004980
+## 6      0.06 21.58   0.9532 10.932   0.005182
+## 7      0.07 20.60   0.9527  9.168   0.005150
+## 8      0.08 19.90   0.9522  7.476   0.005188
+## 9      0.09 19.28   0.9517  5.914   0.005419
+## 10     0.10 18.72   0.9513  4.526   0.005481
+## 11     0.11 18.25   0.9509  3.331   0.005565
+## 12     0.12 17.88   0.9505  2.334   0.005592
+## 13     0.13 17.62   0.9502  1.615   0.005573
+## 14     0.14 17.45   0.9501  1.218   0.005595
+## 15     0.15 17.37   0.9499  1.123   0.005772
 \end{verbatim}
 \begin{alltt}
-\hlcom{# 0.09 seems the best}
-
+\hlcom{# best is}
+\hlstd{mLASSOfiner}\hlopt{$}\hlstd{bestTune}
+\end{alltt}
+\begin{verbatim}
+##    fraction
+## 15     0.15
+\end{verbatim}
+\begin{alltt}
 \hlstd{mRIDGEfine} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"ridge"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{lambda} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,}
     \hlnum{0.1}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.01}\hlstd{)))}
 \hlstd{mRIDGEfine}\hlopt{$}\hlstd{results}
 \end{alltt}
 \begin{verbatim}
 ##    lambda  RMSE Rsquared RMSESD RsquaredSD
-## 1    0.00 18.50   0.9437 2.2311   0.013700
-## 2    0.01 17.08   0.9518 0.8079   0.004190
-## 3    0.02 17.02   0.9519 0.8167   0.004613
-## 4    0.03 17.07   0.9515 0.8462   0.005145
-## 5    0.04 17.19   0.9508 0.8911   0.005730
-## 6    0.05 17.35   0.9498 0.9457   0.006342
-## 7    0.06 17.54   0.9486 1.0055   0.006962
-## 8    0.07 17.77   0.9472 1.0674   0.007583
-## 9    0.08 18.01   0.9457 1.1299   0.008199
-## 10   0.09 18.27   0.9441 1.1920   0.008810
-## 11   0.10 18.55   0.9425 1.2531   0.009412
+## 1    0.00 18.54   0.9436 1.5934   0.010896
+## 2    0.01 17.16   0.9514 0.7828   0.005701
+## 3    0.02 17.07   0.9519 0.7510   0.005412
+## 4    0.03 17.09   0.9518 0.7575   0.005467
+## 5    0.04 17.18   0.9512 0.7813   0.005677
+## 6    0.05 17.31   0.9505 0.8134   0.005966
+## 7    0.06 17.49   0.9494 0.8494   0.006297
+## 8    0.07 17.69   0.9483 0.8867   0.006651
+## 9    0.08 17.91   0.9470 0.9239   0.007016
+## 10   0.09 18.16   0.9456 0.9602   0.007385
+## 11   0.10 18.41   0.9441 0.9953   0.007756
 \end{verbatim}
 \begin{alltt}
 \hlstd{mRIDGEfiner} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"ridge"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{lambda} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0.005}\hlstd{,}
@@ -214,51 +411,57 @@ is short hand for a model that includes pairwise interactions for each predictor
 \end{alltt}
 \begin{verbatim}
 ##    lambda  RMSE Rsquared RMSESD RsquaredSD
-## 1   0.005 17.05   0.9516 0.7883   0.004174
-## 2   0.006 17.01   0.9518 0.7747   0.004126
-## 3   0.007 16.99   0.9520 0.7639   0.004092
-## 4   0.008 16.96   0.9521 0.7549   0.004067
-## 5   0.009 16.94   0.9522 0.7472   0.004048
-## 6   0.010 16.93   0.9522 0.7407   0.004035
-## 7   0.011 16.92   0.9523 0.7351   0.004027
-## 8   0.012 16.91   0.9523 0.7302   0.004022
-## 9   0.013 16.90   0.9524 0.7261   0.004021
-## 10  0.014 16.89   0.9524 0.7225   0.004023
-## 11  0.015 16.89   0.9524 0.7195   0.004028
-## 12  0.016 16.88   0.9524 0.7170   0.004035
-## 13  0.017 16.88   0.9524 0.7149   0.004044
-## 14  0.018 16.88   0.9524 0.7132   0.004056
-## 15  0.019 16.88   0.9524 0.7119   0.004069
-## 16  0.020 16.88   0.9524 0.7110   0.004084
-## 17  0.021 16.88   0.9523 0.7104   0.004101
-## 18  0.022 16.89   0.9523 0.7101   0.004119
-## 19  0.023 16.89   0.9523 0.7100   0.004139
-## 20  0.024 16.89   0.9523 0.7102   0.004160
-## 21  0.025 16.90   0.9522 0.7107   0.004182
-## 22  0.026 16.91   0.9522 0.7113   0.004205
-## 23  0.027 16.91   0.9521 0.7122   0.004229
-## 24  0.028 16.92   0.9521 0.7132   0.004254
-## 25  0.029 16.93   0.9520 0.7144   0.004280
-## 26  0.030 16.94   0.9520 0.7158   0.004306
+## 1   0.005 16.98   0.9524  1.055   0.005344
+## 2   0.006 16.95   0.9526  1.061   0.005314
+## 3   0.007 16.92   0.9527  1.067   0.005295
+## 4   0.008 16.90   0.9528  1.073   0.005285
+## 5   0.009 16.89   0.9529  1.079   0.005282
+## 6   0.010 16.88   0.9529  1.084   0.005282
+## 7   0.011 16.87   0.9530  1.090   0.005287
+## 8   0.012 16.86   0.9530  1.095   0.005294
+## 9   0.013 16.86   0.9530  1.101   0.005304
+## 10  0.014 16.86   0.9530  1.106   0.005316
+## 11  0.015 16.86   0.9530  1.111   0.005330
+## 12  0.016 16.86   0.9530  1.116   0.005345
+## 13  0.017 16.86   0.9530  1.121   0.005362
+## 14  0.018 16.87   0.9529  1.126   0.005380
+## 15  0.019 16.87   0.9529  1.131   0.005399
+## 16  0.020 16.88   0.9529  1.136   0.005420
+## 17  0.021 16.89   0.9528  1.140   0.005441
+## 18  0.022 16.90   0.9528  1.145   0.005464
+## 19  0.023 16.90   0.9527  1.150   0.005487
+## 20  0.024 16.91   0.9527  1.154   0.005511
+## 21  0.025 16.92   0.9526  1.159   0.005536
+## 22  0.026 16.94   0.9525  1.163   0.005561
+## 23  0.027 16.95   0.9525  1.168   0.005587
+## 24  0.028 16.96   0.9524  1.172   0.005614
+## 25  0.029 16.97   0.9523  1.176   0.005641
+## 26  0.030 16.99   0.9522  1.181   0.005669
 \end{verbatim}
 \begin{alltt}
-\hlcom{# 0.023 seems best}
-
+\hlcom{# the best one}
+\hlstd{mRIDGEfiner}\hlopt{$}\hlstd{bestTune}
+\end{alltt}
+\begin{verbatim}
+##    lambda
+## 10  0.014
+\end{verbatim}
+\begin{alltt}
 \hlstd{mENETfine} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"enet"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{expand.grid}\hlstd{(}\hlkwc{lambda} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0.001}\hlstd{,}
     \hlnum{0.01}\hlstd{,} \hlnum{0.1}\hlstd{),} \hlkwc{fraction} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0.4}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.6}\hlstd{)))}
 \hlstd{mENETfine}\hlopt{$}\hlstd{results}
 \end{alltt}
 \begin{verbatim}
 ##   lambda fraction  RMSE Rsquared RMSESD RsquaredSD
-## 1  0.001      0.4 16.24   0.9563 1.0730   0.004472
-## 4  0.010      0.4 16.13   0.9586 1.0273   0.003310
-## 7  0.100      0.4 22.74   0.9557 2.0464   0.003014
-## 2  0.001      0.5 16.66   0.9539 1.1465   0.004998
-## 5  0.010      0.5 15.77   0.9588 0.8909   0.003513
-## 8  0.100      0.5 16.86   0.9568 0.8872   0.003665
-## 3  0.001      0.6 16.93   0.9524 1.1989   0.005321
-## 6  0.010      0.6 16.16   0.9566 0.9615   0.004049
-## 9  0.100      0.6 16.59   0.9541 0.9030   0.005057
+## 1  0.001      0.4 16.26   0.9565 0.8848   0.003724
+## 4  0.010      0.4 16.18   0.9581 1.0260   0.003675
+## 7  0.100      0.4 22.94   0.9553 2.1321   0.004127
+## 2  0.001      0.5 16.64   0.9546 0.8795   0.003647
+## 5  0.010      0.5 15.89   0.9584 0.8946   0.003591
+## 8  0.100      0.5 17.05   0.9559 0.9928   0.003703
+## 3  0.001      0.6 16.84   0.9535 0.9578   0.004200
+## 6  0.010      0.6 16.23   0.9566 0.8379   0.003280
+## 9  0.100      0.6 16.74   0.9536 0.8435   0.004589
 \end{verbatim}
 \begin{alltt}
 \hlstd{mENETfiner} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"enet"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{expand.grid}\hlstd{(}\hlkwc{lambda} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0.001}\hlstd{,}
@@ -267,55 +470,59 @@ is short hand for a model that includes pairwise interactions for each predictor
 \end{alltt}
 \begin{verbatim}
 ##    lambda fraction  RMSE Rsquared RMSESD RsquaredSD
-## 1   0.001      0.5 16.81   0.9536  1.085   0.005505
-## 2   0.012      0.5 15.82   0.9590  1.035   0.004233
-## 3   0.023      0.5 15.84   0.9592  1.035   0.004195
-## 4   0.034      0.5 16.03   0.9585  1.027   0.004228
-## 5   0.045      0.5 16.27   0.9578  1.037   0.004125
-## 6   0.056      0.5 16.49   0.9574  1.064   0.004095
-## 7   0.067      0.5 16.67   0.9570  1.099   0.004207
-## 8   0.078      0.5 16.82   0.9568  1.131   0.004292
-## 9   0.089      0.5 16.93   0.9566  1.159   0.004414
-## 10  0.100      0.5 17.02   0.9563  1.167   0.004539
+## 1   0.001      0.5 16.85   0.9535 0.8808   0.005661
+## 2   0.012      0.5 15.98   0.9578 0.7835   0.003957
+## 3   0.023      0.5 16.03   0.9576 0.8601   0.003964
+## 4   0.034      0.5 16.18   0.9570 0.9269   0.004037
+## 5   0.045      0.5 16.36   0.9566 0.9742   0.004042
+## 6   0.056      0.5 16.53   0.9562 1.0125   0.003977
+## 7   0.067      0.5 16.70   0.9558 1.0340   0.003958
+## 8   0.078      0.5 16.84   0.9555 1.0587   0.004075
+## 9   0.089      0.5 16.96   0.9552 1.0920   0.004301
+## 10  0.100      0.5 17.06   0.9549 1.1178   0.004488
 \end{verbatim}
 \begin{alltt}
-\hlcom{# 0.012, 0.5 best}
+\hlstd{mENETfiner}\hlopt{$}\hlstd{bestTune}
 \end{alltt}
+\begin{verbatim}
+##   fraction lambda
+## 2      0.5  0.012
+\end{verbatim}
 \end{kframe}
 \end{knitrout}
-\noindent We can view what the coefficients will be by using
+\noindent We can view the coefficients via
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{coef} \hlkwb{=} \hlkwd{predict}\hlstd{(m.lasso}\hlopt{$}\hlstd{finalModel,}
-        \hlkwc{mode} \hlstd{=} \hlstr{"fraction"}\hlstd{,}
-        \hlkwc{s} \hlstd{=} \hlnum{0.1}\hlstd{,}\hlcom{# which ever fraction was chosen as best}
-        \hlkwc{type} \hlstd{=} \hlstr{"coefficients"}
+\hlstd{coef} \hlkwb{=} \hlkwd{predict}\hlstd{(mLASSO}\hlopt{$}\hlstd{finalModel,}
+  \hlkwc{mode} \hlstd{=} \hlstr{"fraction"}\hlstd{,}
+  \hlkwc{s} \hlstd{= mLASSO}\hlopt{$}\hlstd{bestTune}\hlopt{$}\hlstd{fraction,}\hlcom{# which ever fraction was chosen as best}
+  \hlkwc{type} \hlstd{=} \hlstr{"coefficients"}
 \hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
 
-  \item How many features have been chosen by the lasso and enet models?
+  \item How many features have been chosen by the \cc{lasso} and \cc{enet} models?
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{# use predict to find the coefficients}
 \hlstd{coefLASSO} \hlkwb{=} \hlkwd{predict}\hlstd{(mLASSOfiner}\hlopt{$}\hlstd{finalModel,} \hlkwc{mode} \hlstd{=} \hlstr{"fraction"}\hlstd{,} \hlkwc{type} \hlstd{=} \hlstr{"coefficient"}\hlstd{,}
-    \hlkwc{s} \hlstd{=} \hlnum{0.09}\hlstd{)}
+    \hlkwc{s} \hlstd{= mLASSO}\hlopt{$}\hlstd{bestTune}\hlopt{$}\hlstd{fraction, )}
 \hlkwd{sum}\hlstd{(coefLASSO}\hlopt{$}\hlstd{coefficients} \hlopt{!=} \hlnum{0}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-## [1] 54
+## [1] 57
 \end{verbatim}
 \begin{alltt}
 \hlstd{coefENET} \hlkwb{=} \hlkwd{predict}\hlstd{(mENETfiner}\hlopt{$}\hlstd{finalModel,} \hlkwc{mode} \hlstd{=} \hlstr{"fraction"}\hlstd{,} \hlkwc{type} \hlstd{=} \hlstr{"coefficient"}\hlstd{,}
-    \hlkwc{s} \hlstd{=} \hlnum{0.5}\hlstd{)}
+    \hlkwc{s} \hlstd{= mENET}\hlopt{$}\hlstd{bestTune}\hlopt{$}\hlstd{fraction)}
 \hlkwd{sum}\hlstd{(coefENET}\hlopt{$}\hlstd{coefficients} \hlopt{!=} \hlnum{0}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-## [1] 21
+## [1] 24
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -330,131 +537,40 @@ is short hand for a model that includes pairwise interactions for each predictor
 \end{alltt}
 \begin{verbatim}
 ##   TrainRMSE TrainRsquared method
-## 1     17.37        0.9498  lasso
+## 1     17.37        0.9499  lasso
 \end{verbatim}
 \begin{alltt}
 \hlkwd{getTrainPerf}\hlstd{(mRIDGEfiner)}
 \end{alltt}
 \begin{verbatim}
 ##   TrainRMSE TrainRsquared method
-## 1     16.88        0.9524  ridge
+## 1     16.86         0.953  ridge
 \end{verbatim}
 \begin{alltt}
 \hlkwd{getTrainPerf}\hlstd{(mENETfiner)}
 \end{alltt}
 \begin{verbatim}
 ##   TrainRMSE TrainRsquared method
-## 1     15.82         0.959   enet
+## 1     15.98        0.9578   enet
 \end{verbatim}
 \begin{alltt}
 \hlkwd{getTrainPerf}\hlstd{(mPCR)}
 \end{alltt}
 \begin{verbatim}
 ##   TrainRMSE TrainRsquared method
-## 1     16.62        0.9553    pcr
+## 1     16.53        0.9557    pcr
 \end{verbatim}
 \begin{alltt}
 \hlkwd{getTrainPerf}\hlstd{(mPLS2)}
 \end{alltt}
 \begin{verbatim}
 ##   TrainRMSE TrainRsquared method
-## 1     15.92        0.9575    pls
+## 1     16.05        0.9587    pls
 \end{verbatim}
 \begin{alltt}
 \hlcom{# The elastic net model has the lowest estimated test error, all are fairly}
 \hlcom{# similar. The elastic net model suggests only 21 non--zero coefficients out}
 \hlcom{# of all of those included in the model.}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-\end{itemize}
-
-
-
-\section*{Advanced}
-
-\marginnote{This section is intended for users who have a more in depth background to R programming. Attendance to the Programming in R course should be adequate background.}
-
-So far we have only used default functions and metrics to compare the performance of models, however we are not restricted to doing this. For example, training of classification models is typically more difficult when there is an imbalance in the two classes in the training set. Models trained from such data typically have high specificity but poor sensitivity or vice versa. Instead of training to maximise accuracy using data from the training set we could try to maximise according to some other criteria, namely sensitivity and specificity being as close to perfect as possible $(1, 1)$.
-
-To add our function we need to make sure we mirror the structure of those included in caret already.\marginnote{We can view a functions code by typing its name with no brackets.} The following code creates a new function that could be used to summarise a model
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fourStats} \hlkwb{=} \hlkwa{function}\hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{lev} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{) \{}
-    \hlcom{# This code will use the area under the ROC curve and the sensitivity and}
-    \hlcom{# specificity values from the built in twoClassSummary function}
-    \hlstd{out} \hlkwb{=} \hlkwd{twoClassSummary}\hlstd{(data,} \hlkwc{lev} \hlstd{=} \hlkwd{levels}\hlstd{(data}\hlopt{$}\hlstd{obs),} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{)}
-    \hlcom{# The best possible model has sensitivity of 1 and specifity of 1. How far}
-    \hlcom{# are we from that value?}
-    \hlstd{coords} \hlkwb{=} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{, out[}\hlstr{"Spec"}\hlstd{], out[}\hlstr{"Sens"}\hlstd{]),} \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{byrow} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-    \hlcom{# return the disctance measure together with the output from two class}
-    \hlcom{# summary}
-    \hlkwd{c}\hlstd{(}\hlkwc{Dist} \hlstd{=} \hlkwd{dist}\hlstd{(coords)[}\hlnum{1}\hlstd{], out)}
-\hlstd{\}}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-\noindent we could then use this in the \cc{train} function
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(Sonar,} \hlkwc{package} \hlstd{=} \hlstr{"mlbench"}\hlstd{)}
-\hlstd{mod} \hlkwb{=} \hlkwd{train}\hlstd{(Class} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= Sonar,}
-              \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{,}
-              \hlcom{# Minimize the distance to the perfect model}
-              \hlkwc{metric} \hlstd{=} \hlstr{"Dist"}\hlstd{,}
-              \hlkwc{maximize} \hlstd{=} \hlnum{FALSE}\hlstd{,}
-              \hlkwc{tuneLength} \hlstd{=} \hlnum{20}\hlstd{,}
-              \hlkwc{trControl} \hlstd{=}
-    \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{classProbs} \hlstd{=} \hlnum{TRUE}\hlstd{,}
-                     \hlkwc{summaryFunction} \hlstd{= fourStats))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\noindent The \cc{plot} function 
-
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(mod)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{marginfigure}
-\centering
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-
-{\centering \includegraphics[width=\maxwidth]{knitr_figure/solutions3-figure2-1} 
-
-}
-
-
-
-\end{knitrout}
-  \caption{Plot of the distance from a perfect classifier measured by sensitivity and specificity against tuning parameter for a $k$ nearest neighbour model.}
-  \label{fig:newsummary}
-\end{marginfigure}
-
-\noindent will then show the profile of the resampling estimates of our chosen statistic against the tuning parameters, see figure~\ref{fig:newsummary}.
-
-\begin{itemize}
-  \item Have a go at writing a function that will allow a regression model to be chosen by the absolute value of the largest residual and try using it to fit a couple of models.
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{maxabsres} \hlkwb{=} \hlkwa{function}\hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{lev} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{) \{}
-    \hlstd{m} \hlkwb{=} \hlkwd{max}\hlstd{(}\hlkwd{abs}\hlstd{(data}\hlopt{$}\hlstd{obs} \hlopt{-} \hlstd{data}\hlopt{$}\hlstd{pred))}
-    \hlkwd{return}\hlstd{(}\hlkwd{c}\hlstd{(}\hlkwc{Max} \hlstd{= m))}
-\hlstd{\}}
-\hlcom{# Test with pls regression}
-\hlstd{tccustom} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{summaryFunction} \hlstd{= maxabsres)}
-\hlstd{mPLScustom} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"pls"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{ncomp} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{6}\hlstd{),}
-    \hlkwc{trControl} \hlstd{= tccustom,} \hlkwc{metric} \hlstd{=} \hlstr{"Max"}\hlstd{,} \hlkwc{maximize} \hlstd{=} \hlnum{FALSE}\hlstd{)}
-\hlcom{# success not to suggest this is a good choice of metric}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
