@@ -1,12 +1,12 @@
 Package: nclRpredictive
 Type: Package
 Title: Predictive Analytics
-Version: 1.0.8
+Version: 1.0.9
 Date: 2015-05-26
 Authors@R: c(
-  person("Jamie", "Owen", email="jamie.owen@ncl.ac.uk", role =c("aut", "cre")),
-  person("Colin", "Gillespie", email="csgillespie@gmail.com", role =c("aut")))
-Maintainer: Jamie Owen <jamie.owen@ncl.ac.uk>   
+  person("Jamie", "Owen", email="jamie.owen@ncl.ac.uk", role =c("aut")),
+  person("Colin", "Gillespie", email="csgillespie@gmail.com", role =c("aut", "cre")))
+Maintainer: Colin Gillespie <csgillespie@gmail.com>   
 Description: Functions and datasets for the predictive analytics course.
 License: GPL-3 | GPL-2
 Depends: R (>= 3.1.0)
