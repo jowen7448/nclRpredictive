@@ -59,7 +59,6 @@
 \graphicspath{{graphics/}}
 \title{Predictive Analytics: practical 2 solutions}
 \date{} % if the \date{} command is left out, the current date will be used
-
 \usepackage{booktabs}
 \usepackage{units}
 \usepackage{fancyvrb}
@@ -70,520 +69,396 @@
 \usepackage{microtype}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
+
 \maketitle% this prints the handout title, author, and date
 
-\section*{The \cc{OJ} data set}
-
-The \cc{OJ} data set from the \cc{ISLR} package contains information on which of two brands of orange juice customers purchased\sidenote{The response variable is \cc{Purchase}.} and can be loaded using
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(OJ,} \hlkwc{package} \hlstd{=} \hlstr{"ISLR"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\noindent After loading the \cc{caret} and \cc{nclRpredictive} package 
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{library}\hlstd{(}\hlstr{"caret"}\hlstd{)}
-\hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
+\hlkwd{data}\hlstd{(FuelEconomy,} \hlkwc{package} \hlstd{=} \hlstr{"AppliedPredictiveModeling"}\hlstd{)}
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
-\noindent make an initial examination of the relationships between each of the predictors and the response\sidenote{Use the \cc{plot} function with a model formula or the \cc{pairs} function.}
+
+\section*{Penalised regression}
+
+The \cc{diabetes} data set in the \cc{lars} package contains measurements of a number of predictors to model a response $y$, a measure of disease progression. There are other columns in the data set which contain interactions so we will extract just the predictors and the response. The data has already been normalized.
+
+% <<>>=
+% data(diabetes, package = "lars")
+% 
+% diabetesdata = cbind(diabetes$x,"y" = diabetes$y)
+% # shortcut to create a model formula with all 2 way 
+% # interactions and square terms.
+% modelFormula = as.formula(paste("y~(.)^2 + ",
+%   paste("I(",colnames(diabetesdata[,1:10]),"^2)", 
+%         collapse = "+",sep = "")))
+% 
+% @
+
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{par}\hlstd{(}\hlkwc{mfrow} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{5}\hlstd{),} \hlkwc{mar} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.5}\hlstd{))}
-\hlkwd{plot}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ)}
+\hlkwd{data}\hlstd{(diabetes,} \hlkwc{package} \hlstd{=} \hlstr{"lars"}\hlstd{)}
+\hlstd{diabetesdata} \hlkwb{=} \hlkwd{cbind}\hlstd{(diabetes}\hlopt{$}\hlstd{x,} \hlkwc{y} \hlstd{= diabetes}\hlopt{$}\hlstd{y)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
-\section*{Initial model building}
 
 \begin{itemize}
-\item To begin, create a logistic regression model that takes into consideration the prices of the two brands of orange juice, \cc{PriceCH} and \cc{PriceMM}.\sidenote{Hint: Use the \cc{train} function, with \cc{method = 'glm'}.  Look at the help page for the data set to understand what these
-variables represent.}
+\item Try fitting a lasso, ridge and elastic net model using all of the main effects, pairwise interactions and square terms from each of the predictors.\sidenote{Hint: see notes for shortcut on creating model formula. Also be aware that if the predictor is a factor a polynomial term doesn't make sense}
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{m1} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{PriceCH} \hlopt{+} \hlstd{PriceMM,} \hlkwc{data} \hlstd{= OJ,} \hlkwc{method} \hlstd{=} \hlstr{"glm"}\hlstd{)}
+\hlcom{## load the data in}
+\hlstd{modelformula} \hlkwb{=} \hlkwd{as.formula}\hlstd{(}\hlkwd{paste}\hlstd{(}\hlstr{"y~(.)^2 + "}\hlstd{,} \hlkwd{paste0}\hlstd{(}\hlstr{"I("}\hlstd{,} \hlkwd{colnames}\hlstd{(diabetesdata),}
+    \hlstr{"^2)"}\hlstd{,} \hlkwc{collapse} \hlstd{=} \hlstr{"+"}\hlstd{)))}
+\hlstd{mLASSO} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"lasso"}\hlstd{)}
+\hlstd{mRIDGE} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"ridge"}\hlstd{)}
+\hlstd{mENET} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"enet"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-  \item What proportion of purchases does this model get right?
+\marginnote{\cc{fraction = 0} is the same as the null model.}
+\marginnote{ 
+\cc{$y \sim (.) \wedge 2$}
+is short hand for a model that includes pairwise interactions for each predictor, so if we use this we should only need to add the square terms}
+
+% <<warning = FALSE, message = FALSE, echo = FALSE>>=
+% m.lasso = train(modelFormula, data = diabetesdata, 
+%         method = "lasso", 
+%         tuneGrid = data.frame(fraction = seq(0,1,0.05)))
+% @
+% 
+% <<warning = FALSE, message = FALSE, echo = FALSE>>=
+% m.lasso = train(modelFormula, data = diabetesdata, 
+%         method = "lasso", 
+%         tuneGrid = data.frame(fraction = seq(0,1,0.05)))
+% @
+
+
+  \item Try to narrow in on the region of lowest RMSE for each model, don't forget about the \cc{tuneGrid} argument to the train function.
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{mean}\hlstd{(}\hlkwd{predict}\hlstd{(m1)} \hlopt{!=} \hlstd{OJ}\hlopt{$}\hlstd{Purchase)}
+\hlcom{# examine previous output then train over a finer grid near the better end}
+\hlstd{mLASSOfine} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"lasso"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{fraction} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0.1}\hlstd{,}
+    \hlnum{0.5}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.05}\hlstd{)))}
+\hlstd{mLASSOfine}\hlopt{$}\hlstd{results}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.3776
+##   fraction  RMSE Rsquared RMSESD RsquaredSD
+## 1     0.10 17.48   0.9498  1.199   0.007721
+## 2     0.15 17.88   0.9475  1.460   0.009881
+## 3     0.20 18.19   0.9456  1.704   0.011844
+## 4     0.25 18.36   0.9445  1.855   0.012976
+## 5     0.30 18.50   0.9437  1.968   0.013817
+## 6     0.35 18.58   0.9432  1.999   0.014093
+## 7     0.40 18.62   0.9429  2.035   0.014408
+## 8     0.45 18.66   0.9427  2.075   0.014785
+## 9     0.50 18.69   0.9425  2.086   0.014922
+\end{verbatim}
+\begin{alltt}
+\hlcom{# best still right down at the 0.1 end}
+\hlstd{mLASSOfiner} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"lasso"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{fraction} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0.01}\hlstd{,}
+    \hlnum{0.15}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.01}\hlstd{)))}
+\hlstd{mLASSOfiner}\hlopt{$}\hlstd{results}
+\end{alltt}
+\begin{verbatim}
+##    fraction  RMSE Rsquared  RMSESD RsquaredSD
+## 1      0.01 39.67   0.9562 19.6313   0.005303
+## 2      0.02 26.91   0.9549 15.2340   0.004879
+## 3      0.03 22.03   0.9546 10.9004   0.005734
+## 4      0.04 19.57   0.9534  7.7419   0.006264
+## 5      0.05 18.36   0.9528  5.6974   0.006430
+## 6      0.06 17.85   0.9520  4.1728   0.006489
+## 7      0.07 17.61   0.9514  2.9337   0.006431
+## 8      0.08 17.48   0.9508  1.8775   0.006491
+## 9      0.09 17.39   0.9502  1.1800   0.006490
+## 10     0.10 17.37   0.9498  0.9972   0.006489
+## 11     0.11 17.41   0.9496  1.0084   0.006611
+## 12     0.12 17.47   0.9493  1.0294   0.006780
+## 13     0.13 17.53   0.9490  1.0602   0.006985
+## 14     0.14 17.59   0.9487  1.0933   0.007181
+## 15     0.15 17.65   0.9485  1.1266   0.007329
+\end{verbatim}
+\begin{alltt}
+\hlcom{# 0.09 seems the best}
+
+\hlstd{mRIDGEfine} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"ridge"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{lambda} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,}
+    \hlnum{0.1}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.01}\hlstd{)))}
+\hlstd{mRIDGEfine}\hlopt{$}\hlstd{results}
+\end{alltt}
+\begin{verbatim}
+##    lambda  RMSE Rsquared RMSESD RsquaredSD
+## 1    0.00 18.50   0.9437 2.2311   0.013700
+## 2    0.01 17.08   0.9518 0.8079   0.004190
+## 3    0.02 17.02   0.9519 0.8167   0.004613
+## 4    0.03 17.07   0.9515 0.8462   0.005145
+## 5    0.04 17.19   0.9508 0.8911   0.005730
+## 6    0.05 17.35   0.9498 0.9457   0.006342
+## 7    0.06 17.54   0.9486 1.0055   0.006962
+## 8    0.07 17.77   0.9472 1.0674   0.007583
+## 9    0.08 18.01   0.9457 1.1299   0.008199
+## 10   0.09 18.27   0.9441 1.1920   0.008810
+## 11   0.10 18.55   0.9425 1.2531   0.009412
+\end{verbatim}
+\begin{alltt}
+\hlstd{mRIDGEfiner} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"ridge"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{lambda} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0.005}\hlstd{,}
+    \hlnum{0.03}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.001}\hlstd{)))}
+\hlstd{mRIDGEfiner}\hlopt{$}\hlstd{results}
+\end{alltt}
+\begin{verbatim}
+##    lambda  RMSE Rsquared RMSESD RsquaredSD
+## 1   0.005 17.05   0.9516 0.7883   0.004174
+## 2   0.006 17.01   0.9518 0.7747   0.004126
+## 3   0.007 16.99   0.9520 0.7639   0.004092
+## 4   0.008 16.96   0.9521 0.7549   0.004067
+## 5   0.009 16.94   0.9522 0.7472   0.004048
+## 6   0.010 16.93   0.9522 0.7407   0.004035
+## 7   0.011 16.92   0.9523 0.7351   0.004027
+## 8   0.012 16.91   0.9523 0.7302   0.004022
+## 9   0.013 16.90   0.9524 0.7261   0.004021
+## 10  0.014 16.89   0.9524 0.7225   0.004023
+## 11  0.015 16.89   0.9524 0.7195   0.004028
+## 12  0.016 16.88   0.9524 0.7170   0.004035
+## 13  0.017 16.88   0.9524 0.7149   0.004044
+## 14  0.018 16.88   0.9524 0.7132   0.004056
+## 15  0.019 16.88   0.9524 0.7119   0.004069
+## 16  0.020 16.88   0.9524 0.7110   0.004084
+## 17  0.021 16.88   0.9523 0.7104   0.004101
+## 18  0.022 16.89   0.9523 0.7101   0.004119
+## 19  0.023 16.89   0.9523 0.7100   0.004139
+## 20  0.024 16.89   0.9523 0.7102   0.004160
+## 21  0.025 16.90   0.9522 0.7107   0.004182
+## 22  0.026 16.91   0.9522 0.7113   0.004205
+## 23  0.027 16.91   0.9521 0.7122   0.004229
+## 24  0.028 16.92   0.9521 0.7132   0.004254
+## 25  0.029 16.93   0.9520 0.7144   0.004280
+## 26  0.030 16.94   0.9520 0.7158   0.004306
+\end{verbatim}
+\begin{alltt}
+\hlcom{# 0.023 seems best}
+
+\hlstd{mENETfine} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"enet"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{expand.grid}\hlstd{(}\hlkwc{lambda} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0.001}\hlstd{,}
+    \hlnum{0.01}\hlstd{,} \hlnum{0.1}\hlstd{),} \hlkwc{fraction} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0.4}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.6}\hlstd{)))}
+\hlstd{mENETfine}\hlopt{$}\hlstd{results}
+\end{alltt}
+\begin{verbatim}
+##   lambda fraction  RMSE Rsquared RMSESD RsquaredSD
+## 1  0.001      0.4 16.24   0.9563 1.0730   0.004472
+## 4  0.010      0.4 16.13   0.9586 1.0273   0.003310
+## 7  0.100      0.4 22.74   0.9557 2.0464   0.003014
+## 2  0.001      0.5 16.66   0.9539 1.1465   0.004998
+## 5  0.010      0.5 15.77   0.9588 0.8909   0.003513
+## 8  0.100      0.5 16.86   0.9568 0.8872   0.003665
+## 3  0.001      0.6 16.93   0.9524 1.1989   0.005321
+## 6  0.010      0.6 16.16   0.9566 0.9615   0.004049
+## 9  0.100      0.6 16.59   0.9541 0.9030   0.005057
+\end{verbatim}
+\begin{alltt}
+\hlstd{mENETfiner} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"enet"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{expand.grid}\hlstd{(}\hlkwc{lambda} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0.001}\hlstd{,}
+    \hlnum{0.1}\hlstd{,} \hlkwc{length.out} \hlstd{=} \hlnum{10}\hlstd{),} \hlkwc{fraction} \hlstd{=} \hlnum{0.5}\hlstd{))}
+\hlstd{mENETfiner}\hlopt{$}\hlstd{results}
+\end{alltt}
+\begin{verbatim}
+##    lambda fraction  RMSE Rsquared RMSESD RsquaredSD
+## 1   0.001      0.5 16.81   0.9536  1.085   0.005505
+## 2   0.012      0.5 15.82   0.9590  1.035   0.004233
+## 3   0.023      0.5 15.84   0.9592  1.035   0.004195
+## 4   0.034      0.5 16.03   0.9585  1.027   0.004228
+## 5   0.045      0.5 16.27   0.9578  1.037   0.004125
+## 6   0.056      0.5 16.49   0.9574  1.064   0.004095
+## 7   0.067      0.5 16.67   0.9570  1.099   0.004207
+## 8   0.078      0.5 16.82   0.9568  1.131   0.004292
+## 9   0.089      0.5 16.93   0.9566  1.159   0.004414
+## 10  0.100      0.5 17.02   0.9563  1.167   0.004539
+\end{verbatim}
+\begin{alltt}
+\hlcom{# 0.012, 0.5 best}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\noindent We can view what the coefficients will be by using
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{coef} \hlkwb{=} \hlkwd{predict}\hlstd{(m.lasso}\hlopt{$}\hlstd{finalModel,}
+        \hlkwc{mode} \hlstd{=} \hlstr{"fraction"}\hlstd{,}
+        \hlkwc{s} \hlstd{=} \hlnum{0.1}\hlstd{,}\hlcom{# which ever fraction was chosen as best}
+        \hlkwc{type} \hlstd{=} \hlstr{"coefficients"}
+\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+  \item How many features have been chosen by the lasso and enet models?
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# use predict to find the coefficients}
+\hlstd{coefLASSO} \hlkwb{=} \hlkwd{predict}\hlstd{(mLASSOfiner}\hlopt{$}\hlstd{finalModel,} \hlkwc{mode} \hlstd{=} \hlstr{"fraction"}\hlstd{,} \hlkwc{type} \hlstd{=} \hlstr{"coefficient"}\hlstd{,}
+    \hlkwc{s} \hlstd{=} \hlnum{0.09}\hlstd{)}
+\hlkwd{sum}\hlstd{(coefLASSO}\hlopt{$}\hlstd{coefficients} \hlopt{!=} \hlnum{0}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 54
+\end{verbatim}
+\begin{alltt}
+\hlstd{coefENET} \hlkwb{=} \hlkwd{predict}\hlstd{(mENETfiner}\hlopt{$}\hlstd{finalModel,} \hlkwc{mode} \hlstd{=} \hlstr{"fraction"}\hlstd{,} \hlkwc{type} \hlstd{=} \hlstr{"coefficient"}\hlstd{,}
+    \hlkwc{s} \hlstd{=} \hlnum{0.5}\hlstd{)}
+\hlkwd{sum}\hlstd{(coefENET}\hlopt{$}\hlstd{coefficients} \hlopt{!=} \hlnum{0}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 21
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-  \item How does this compare to if we used no model?
+  \item How do these models compare to principal components and partial least squares regression?
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{# with no model we essentially predict according to}
-\hlcom{# proportion of observations in data}
-\hlstd{probs} \hlkwb{=} \hlkwd{table}\hlstd{(OJ}\hlopt{$}\hlstd{Purchase)}\hlopt{/}\hlkwd{nrow}\hlstd{(OJ)}
-\hlstd{preds} \hlkwb{=} \hlkwd{sample}\hlstd{(}\hlkwd{levels}\hlstd{(OJ}\hlopt{$}\hlstd{Purchase),} \hlkwc{prob} \hlstd{= probs)}
-\hlkwd{mean}\hlstd{(preds} \hlopt{!=} \hlstd{OJ}\hlopt{$}\hlstd{Purchase)}
+\hlstd{mPCR} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"pcr"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{ncomp} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{7}\hlstd{))}
+\hlstd{mPLS} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"pls"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{ncomp} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{7}\hlstd{))}
+\hlstd{mPLS2} \hlkwb{=} \hlkwd{train}\hlstd{(modelformula,} \hlkwc{data} \hlstd{= diabetesdata,} \hlkwc{method} \hlstd{=} \hlstr{"pls"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{ncomp} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{15}\hlstd{))}
+\hlkwd{getTrainPerf}\hlstd{(mLASSOfiner)}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.4991
+##   TrainRMSE TrainRsquared method
+## 1     17.37        0.9498  lasso
 \end{verbatim}
+\begin{alltt}
+\hlkwd{getTrainPerf}\hlstd{(mRIDGEfiner)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     16.88        0.9524  ridge
+\end{verbatim}
+\begin{alltt}
+\hlkwd{getTrainPerf}\hlstd{(mENETfiner)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     15.82         0.959   enet
+\end{verbatim}
+\begin{alltt}
+\hlkwd{getTrainPerf}\hlstd{(mPCR)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     16.62        0.9553    pcr
+\end{verbatim}
+\begin{alltt}
+\hlkwd{getTrainPerf}\hlstd{(mPLS2)}
+\end{alltt}
+\begin{verbatim}
+##   TrainRMSE TrainRsquared method
+## 1     15.92        0.9575    pls
+\end{verbatim}
+\begin{alltt}
+\hlcom{# The elastic net model has the lowest estimated test error, all are fairly}
+\hlcom{# similar. The elastic net model suggests only 21 non--zero coefficients out}
+\hlcom{# of all of those included in the model.}
+\end{alltt}
 \end{kframe}
 \end{knitrout}
 \end{itemize}
 
-\section*{Visualising the boundary}
 
-The \cc{nclRpredictive} package contains following code produces a plot of the decision boundary as seen in figure~\ref{fig:purchaseboundary}.
+
+\section*{Advanced}
+
+\marginnote{This section is intended for users who have a more in depth background to R programming. Attendance to the Programming in R course should be adequate background.}
+
+So far we have only used default functions and metrics to compare the performance of models, however we are not restricted to doing this. For example, training of classification models is typically more difficult when there is an imbalance in the two classes in the training set. Models trained from such data typically have high specificity but poor sensitivity or vice versa. Instead of training to maximise accuracy using data from the training set we could try to maximise according to some other criteria, namely sensitivity and specificity being as close to perfect as possible $(1, 1)$.
+
+To add our function we need to make sure we mirror the structure of those included in caret already.\marginnote{We can view a functions code by typing its name with no brackets.} The following code creates a new function that could be used to summarise a model
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{boundary_plot}\hlstd{(m1, OJ}\hlopt{$}\hlstd{PriceCH, OJ}\hlopt{$}\hlstd{PriceMM, OJ}\hlopt{$}\hlstd{Purchase,} \hlkwc{xlab} \hlstd{=} \hlstr{"Price CH"}\hlstd{,}
-    \hlkwc{ylab} \hlstd{=} \hlstr{"Price MM"}\hlstd{)}
+\hlstd{fourStats} \hlkwb{=} \hlkwa{function}\hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{lev} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{) \{}
+    \hlcom{# This code will use the area under the ROC curve and the sensitivity and}
+    \hlcom{# specificity values from the built in twoClassSummary function}
+    \hlstd{out} \hlkwb{=} \hlkwd{twoClassSummary}\hlstd{(data,} \hlkwc{lev} \hlstd{=} \hlkwd{levels}\hlstd{(data}\hlopt{$}\hlstd{obs),} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{)}
+    \hlcom{# The best possible model has sensitivity of 1 and specifity of 1. How far}
+    \hlcom{# are we from that value?}
+    \hlstd{coords} \hlkwb{=} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{, out[}\hlstr{"Spec"}\hlstd{], out[}\hlstr{"Sens"}\hlstd{]),} \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{byrow} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+    \hlcom{# return the disctance measure together with the output from two class}
+    \hlcom{# summary}
+    \hlkwd{c}\hlstd{(}\hlkwc{Dist} \hlstd{=} \hlkwd{dist}\hlstd{(coords)[}\hlnum{1}\hlstd{], out)}
+\hlstd{\}}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in localPlotWindow(xlim, ylim, ...): formal argument "{}xlab"{} matched by multiple actual arguments}}\end{kframe}
+\end{kframe}
 \end{knitrout}
-\noindent Run the boundary code above, and make sure you get a similar plot.
+\noindent we could then use this in the \cc{train} function
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(Sonar,} \hlkwc{package} \hlstd{=} \hlstr{"mlbench"}\hlstd{)}
+\hlstd{mod} \hlkwb{=} \hlkwd{train}\hlstd{(Class} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= Sonar,}
+              \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{,}
+              \hlcom{# Minimize the distance to the perfect model}
+              \hlkwc{metric} \hlstd{=} \hlstr{"Dist"}\hlstd{,}
+              \hlkwc{maximize} \hlstd{=} \hlnum{FALSE}\hlstd{,}
+              \hlkwc{tuneLength} \hlstd{=} \hlnum{20}\hlstd{,}
+              \hlkwc{trControl} \hlstd{=}
+    \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{classProbs} \hlstd{=} \hlnum{TRUE}\hlstd{,}
+                     \hlkwc{summaryFunction} \hlstd{= fourStats))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\noindent The \cc{plot} function 
+
+\begin{knitrout}\small
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(mod)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
 \begin{marginfigure}
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in localPlotWindow(xlim, ylim, ...): formal argument "{}xlab"{} matched by multiple actual arguments}}\end{kframe}
-
-{\centering \includegraphics[width=\maxwidth]{knitr_figure/solutions2-figure1-1} 
-
-}
-
-
-
-\end{knitrout}
-  \caption{Examining the decision boundary for orange juice brand purchases by price.}
-  \label{fig:purchaseboundary}
-\end{marginfigure}
-
-\begin{itemize}
-  \item What happens if we add an interaction term? How does the boundary change?
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# We now have a curved decision boundary.  There are two}
-\hlcom{# regions of where we would predict MM, bottom left, and a}
-\hlcom{# tiny one up in the top right.}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-\item Try adding polynomial terms.
-\end{itemize}
-
-\section*{Using all of the predictors}
-
-\begin{itemize}
-  \item Fit a logistic regression model using all of the predictors.
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{mLM} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ,} \hlkwc{method} \hlstd{=} \hlstr{"glm"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-  \item Is there a problem?
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{## YES!}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\noindent We can view the most recent warning messages by using the \cc{warnings} function
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{warnings}\hlstd{()}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-
-
-\noindent This suggests some rank--deficient fit problems,
-
-\item Look at the final model, you should notice that a number of parameters have not been estimated
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{m_log}\hlopt{$}\hlstd{finalModel}
-\end{alltt}
-\begin{verbatim}
-## 
-## Call:  NULL
-## 
-## Coefficients:
-##    (Intercept)  WeekofPurchase         StoreID  
-##         5.1581         -0.0118         -0.1709  
-##        PriceCH         PriceMM          DiscCH  
-##         4.5865         -3.6249         10.7967  
-##         DiscMM       SpecialCH       SpecialMM  
-##        26.4615          0.2672          0.3169  
-##        LoyalCH     SalePriceMM     SalePriceCH  
-##        -6.3023              NA              NA  
-##      PriceDiff       Store7Yes       PctDiscMM  
-##             NA          0.3113        -50.6976  
-##      PctDiscCH   ListPriceDiff           STORE  
-##       -27.3399              NA              NA  
-## 
-## Degrees of Freedom: 1069 Total (i.e. Null);  1057 Residual
-## Null Deviance:	    1430 
-## Residual Deviance: 817 	AIC: 843
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\noindent The help page
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{`?`}\hlstd{(ISLR}\hlopt{::}\hlstd{OJ)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-\noindent gives further insight: the \cc{PriceDiff} variable is a linear combination of \cc{SalePriceMM} and \cc{SalePriceCH} so we should remove this. In addition the \cc{StoreID} and \cc{STORE} variable are different encodings of the same information so we should remove one of these too. We also have \cc{DiscCH} and \cc{DiscMM} which are the differences between \cc{PriceCH} and \cc{SalePriceCH} and \cc{PriceMM} and \cc{SalePriceMM} respectively and \cc{ListPriceDiff} is a linear combination of these prices. Removing all of these variables allows the model to be fit and all parameters to be estimated.\sidenote{This is to highlight that we need to understand what we have in our data.}
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,} \hlopt{!}\hlstd{(}\hlkwd{colnames}\hlstd{(OJ)} \hlopt{%in%} \hlkwd{c}\hlstd{(}\hlstr{"STORE"}\hlstd{,} \hlstr{"SalePriceCH"}\hlstd{,}
-    \hlstr{"SalePriceMM"}\hlstd{,} \hlstr{"PriceDiff"}\hlstd{,} \hlstr{"ListPriceDiff"}\hlstd{))]}
-\hlstd{OJsub}\hlopt{$}\hlstd{Store7} \hlkwb{=} \hlkwd{as.numeric}\hlstd{(OJsub}\hlopt{$}\hlstd{Store7)} \hlopt{-} \hlnum{1}
-\hlstd{m_log} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"glm"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\noindent The problem of linear combinations of predictors can be shown with this simple theoretical example. Suppose we have a response $y$ and three predictors $x_1$, $x_2$ and the linear combination $x_3 = (x_1 + x_2)$. On fitting a linear model we try to find estimates of the parameters in the equation
-\[
-y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 (x_1 + x_2).
-\]
-\noindent However we could just as easily rewrite this as
-\begin{align*}
-y &= \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 (x_1 + x_2) \\
-&= \beta_0 + (\beta_1 + \beta_3) x_1 + (\beta_2 + \beta_3) x_2 \\
-&= \beta_0 + \beta_1^{\ast} x_1 + \beta_2^{\ast} x_2.
-\end{align*}
-This leads to a rank--deficient model matrix, essentially we can never find the value of the $\beta_3$ due to the fact we have the linear combination of predictors.
-
-We could achieve the same using the \cc{caret} package function \cc{findLinearCombos}. The function takes a model matrix as an argument. We can create such a matrix using the 
-\cc{model.matrix} function with our formula object
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{remove} \hlkwb{=} \hlkwd{findLinearCombos}\hlstd{(}\hlkwd{model.matrix}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-\noindent The output list has a component called \cc{remove} suggesting which variables should be removed to get rid of linear combinations
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{(badvar} \hlkwb{=} \hlkwd{colnames}\hlstd{(OJ)[remove}\hlopt{$}\hlstd{remove])}
-\end{alltt}
-\begin{verbatim}
-## [1] "SalePriceMM"   "SalePriceCH"   "PriceDiff"    
-## [4] "ListPriceDiff" "STORE"
-\end{verbatim}
-\begin{alltt}
-\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,} \hlopt{-}\hlstd{remove}\hlopt{$}\hlstd{remove]}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-  \item How accurate is this new model using more predictors?]
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# the corrected model}
-\hlstd{remove} \hlkwb{=} \hlkwd{findLinearCombos}\hlstd{(}\hlkwd{model.matrix}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJ))}
-\hlstd{(badvar} \hlkwb{=} \hlkwd{colnames}\hlstd{(OJ)[remove}\hlopt{$}\hlstd{remove])}
-\end{alltt}
-\begin{verbatim}
-## [1] "SalePriceMM"   "SalePriceCH"   "PriceDiff"    
-## [4] "ListPriceDiff" "STORE"
-\end{verbatim}
-\begin{alltt}
-\hlstd{OJsub} \hlkwb{=} \hlstd{OJ[,} \hlopt{-}\hlstd{(remove}\hlopt{$}\hlstd{remove)]}
-\hlstd{mLM} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"glm"}\hlstd{)}
-\hlkwd{mean}\hlstd{(}\hlkwd{predict}\hlstd{(mLM, OJsub)} \hlopt{==} \hlstd{OJsub}\hlopt{$}\hlstd{Purchase)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.8355
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-  \item What are the values of sensitivity and specificity?
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{## could use confusionMatrix}
-\hlstd{(cmLM} \hlkwb{=} \hlkwd{confusionMatrix}\hlstd{(}\hlkwd{predict}\hlstd{(mLM, OJsub), OJsub}\hlopt{$}\hlstd{Purchase))}
-\end{alltt}
-\begin{verbatim}
-## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction  CH  MM
-##         CH 577 100
-##         MM  76 317
-##                                         
-##                Accuracy : 0.836         
-##                  95% CI : (0.812, 0.857)
-##     No Information Rate : 0.61          
-##     P-Value [Acc > NIR] : <2e-16        
-##                                         
-##                   Kappa : 0.651         
-##  Mcnemar's Test P-Value : 0.083         
-##                                         
-##             Sensitivity : 0.884         
-##             Specificity : 0.760         
-##          Pos Pred Value : 0.852         
-##          Neg Pred Value : 0.807         
-##              Prevalence : 0.610         
-##          Detection Rate : 0.539         
-##    Detection Prevalence : 0.633         
-##       Balanced Accuracy : 0.822         
-##                                         
-##        'Positive' Class : CH            
-## 
-\end{verbatim}
-\begin{alltt}
-\hlcom{# or}
-\hlkwd{sensitivity}\hlstd{(}\hlkwd{predict}\hlstd{(mLM, OJsub), OJsub}\hlopt{$}\hlstd{Purchase)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.8836
-\end{verbatim}
-\begin{alltt}
-\hlkwd{specificity}\hlstd{(}\hlkwd{predict}\hlstd{(mLM, OJsub), OJsub}\hlopt{$}\hlstd{Purchase)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.7602
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-  \item What does this mean?
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# The model is fairly good at picking up both positive}
-\hlcom{# events, person buys CH, and negative events, MM.}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\end{itemize}
-
-\section*{ROC curves}
-
-\begin{marginfigure}
+\centering
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
 
-{\centering \includegraphics[width=\maxwidth]{knitr_figure/solutions2-figure2-1} 
+{\centering \includegraphics[width=\maxwidth]{knitr_figure/solutions3-figure2-1} 
 
 }
 
 
 
 \end{knitrout}
-  \caption{An example of a ROC curve for the logistic regression classifier. We can overlay ROC curves by adding the \cc{add = TRUE} argument.}
-  \label{fig:roc}
+  \caption{Plot of the distance from a perfect classifier measured by sensitivity and specificity against tuning parameter for a $k$ nearest neighbour model.}
+  \label{fig:newsummary}
 \end{marginfigure}
 
-If we were interested in the area under the ROC curve, we could retrain the model using the \cc{twoClassSummary} function as an argument to a train control object. Alternatively we can
-use the \cc{pROC} package
-
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(}\hlstr{"pROC"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\noindent This also allows us to view the ROC curve, via
-
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{curve} \hlkwb{=} \hlkwd{roc}\hlstd{(}\hlkwc{response} \hlstd{= OJsub}\hlopt{$}\hlstd{Purchase,} \hlkwc{predictor} \hlstd{=} \hlkwd{predict}\hlstd{(m_log,}
-    \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)[,} \hlstr{"CH"}\hlstd{])}
-\hlcom{## this makes CH the event of interest}
-\hlkwd{plot}\hlstd{(curve,} \hlkwc{legacy.axes} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-\hlkwd{auc}\hlstd{(curve)}
-\hlnum{NA}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-
-\section*{Other classification models}
+\noindent will then show the profile of the resampling estimates of our chosen statistic against the tuning parameters, see figure~\ref{fig:newsummary}.
 
 \begin{itemize}
-  \item Try fitting models using the other classification algorithms we have seen so far. To begin with, just have two covariates and use the \cc{boundary\_plot} function to visualise
-  the results\marginnote{We have seen LDA, QDA, KNN and logistic regression.}
+  \item Have a go at writing a function that will allow a regression model to be chosen by the absolute value of the largest residual and try using it to fit a couple of models.
 \begin{knitrout}\small
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{mKNN} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{)}
-\hlstd{mLDA} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"lda"}\hlstd{)}
-\hlstd{mQDA} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"qda"}\hlstd{)}
-\hlstd{cmKNN} \hlkwb{=} \hlkwd{confusionMatrix}\hlstd{(}\hlkwd{predict}\hlstd{(mKNN, OJsub), OJsub}\hlopt{$}\hlstd{Purchase)}
-\hlstd{cmLDA} \hlkwb{=} \hlkwd{confusionMatrix}\hlstd{(}\hlkwd{predict}\hlstd{(mLDA, OJsub), OJsub}\hlopt{$}\hlstd{Purchase)}
-\hlstd{cmQDA} \hlkwb{=} \hlkwd{confusionMatrix}\hlstd{(}\hlkwd{predict}\hlstd{(mQDA, OJsub), OJsub}\hlopt{$}\hlstd{Purchase)}
-\hlstd{(info} \hlkwb{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{Model} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"logistic"}\hlstd{,} \hlstr{"knn"}\hlstd{,} \hlstr{"lda"}\hlstd{,} \hlstr{"qda"}\hlstd{),}
-    \hlkwc{Accuracy} \hlstd{=} \hlkwd{c}\hlstd{(cmLM}\hlopt{$}\hlstd{overall[}\hlstr{"Accuracy"}\hlstd{], cmKNN}\hlopt{$}\hlstd{overall[}\hlstr{"Accuracy"}\hlstd{],}
-        \hlstd{cmLDA}\hlopt{$}\hlstd{overall[}\hlstr{"Accuracy"}\hlstd{], cmQDA}\hlopt{$}\hlstd{overall[}\hlstr{"Accuracy"}\hlstd{]),}
-    \hlkwc{Sensitivity} \hlstd{=} \hlkwd{c}\hlstd{(cmLM}\hlopt{$}\hlstd{byClass[}\hlstr{"Sensitivity"}\hlstd{], cmKNN}\hlopt{$}\hlstd{byClass[}\hlstr{"Sensitivity"}\hlstd{],}
-        \hlstd{cmLDA}\hlopt{$}\hlstd{byClass[}\hlstr{"Sensitivity"}\hlstd{], cmQDA}\hlopt{$}\hlstd{byClass[}\hlstr{"Sensitivity"}\hlstd{]),}
-    \hlkwc{Specificity} \hlstd{=} \hlkwd{c}\hlstd{(cmLM}\hlopt{$}\hlstd{byClass[}\hlstr{"Specificity"}\hlstd{], cmKNN}\hlopt{$}\hlstd{byClass[}\hlstr{"Specificity"}\hlstd{],}
-        \hlstd{cmLDA}\hlopt{$}\hlstd{byClass[}\hlstr{"Specificity"}\hlstd{], cmQDA}\hlopt{$}\hlstd{byClass[}\hlstr{"Specificity"}\hlstd{])))}
+\hlstd{maxabsres} \hlkwb{=} \hlkwa{function}\hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{lev} \hlstd{=} \hlkwa{NULL}\hlstd{,} \hlkwc{model} \hlstd{=} \hlkwa{NULL}\hlstd{) \{}
+    \hlstd{m} \hlkwb{=} \hlkwd{max}\hlstd{(}\hlkwd{abs}\hlstd{(data}\hlopt{$}\hlstd{obs} \hlopt{-} \hlstd{data}\hlopt{$}\hlstd{pred))}
+    \hlkwd{return}\hlstd{(}\hlkwd{c}\hlstd{(}\hlkwc{Max} \hlstd{= m))}
+\hlstd{\}}
+\hlcom{# Test with pls regression}
+\hlstd{tccustom} \hlkwb{=} \hlkwd{trainControl}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"cv"}\hlstd{,} \hlkwc{summaryFunction} \hlstd{= maxabsres)}
+\hlstd{mPLScustom} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"pls"}\hlstd{,} \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{ncomp} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{6}\hlstd{),}
+    \hlkwc{trControl} \hlstd{= tccustom,} \hlkwc{metric} \hlstd{=} \hlstr{"Max"}\hlstd{,} \hlkwc{maximize} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\hlcom{# success not to suggest this is a good choice of metric}
 \end{alltt}
-\begin{verbatim}
-##      Model Accuracy Sensitivity Specificity
-## 1 logistic   0.8355      0.8836      0.7602
-## 2      knn   0.8112      0.8775      0.7074
-## 3      lda   0.8374      0.8790      0.7722
-## 4      qda   0.8168      0.8407      0.7794
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-  \item How do they compare?
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#Logistic regression and LDA have highest accuracy, QDA is poorest at classifying events, KNN gives most false positives}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-  \item How does varying the number of nearest neighbours in a KNN affect the model fit?
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# Accuracy increases at first with knn before then getting}
-\hlcom{# worse after a peak value of 9.}
-\hlstd{(mKNN2} \hlkwb{=} \hlkwd{train}\hlstd{(Purchase} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= OJsub,} \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{,}
-    \hlkwc{tuneGrid} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{k} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{30}\hlstd{)))}
-\end{alltt}
-\begin{verbatim}
-## k-Nearest Neighbors 
-## 
-## 1070 samples
-##   12 predictors
-##    2 classes: 'CH', 'MM' 
-## 
-## No pre-processing
-## Resampling: Bootstrapped (25 reps) 
-## 
-## Summary of sample sizes: 1070, 1070, 1070, 1070, 1070, 1070, ... 
-## 
-## Resampling results across tuning parameters:
-## 
-##   k   Accuracy  Kappa   Accuracy SD  Kappa SD
-##    1  0.6883    0.3410  0.02370      0.05008 
-##    2  0.6737    0.3125  0.02367      0.05202 
-##    3  0.6867    0.3373  0.02162      0.04713 
-##    4  0.6925    0.3493  0.01875      0.04100 
-##    5  0.7029    0.3694  0.01759      0.03862 
-##    6  0.7040    0.3709  0.02185      0.04841 
-##    7  0.7087    0.3793  0.01864      0.04414 
-##    8  0.7060    0.3718  0.02488      0.05575 
-##    9  0.7056    0.3706  0.02406      0.05324 
-##   10  0.7024    0.3617  0.02307      0.05237 
-##   11  0.6969    0.3502  0.02492      0.05329 
-##   12  0.6921    0.3403  0.02416      0.05491 
-##   13  0.6928    0.3397  0.02177      0.04831 
-##   14  0.6941    0.3431  0.02185      0.04796 
-##   15  0.6895    0.3314  0.02647      0.05649 
-##   16  0.6844    0.3211  0.02497      0.05286 
-##   17  0.6801    0.3113  0.02631      0.05779 
-##   18  0.6815    0.3151  0.02651      0.05781 
-##   19  0.6758    0.3022  0.02335      0.05287 
-##   20  0.6741    0.2985  0.02269      0.05188 
-##   21  0.6715    0.2926  0.02228      0.04972 
-##   22  0.6724    0.2937  0.02300      0.04996 
-##   23  0.6703    0.2887  0.02341      0.05365 
-##   24  0.6734    0.2940  0.02297      0.05412 
-##   25  0.6700    0.2852  0.01909      0.04651 
-##   26  0.6694    0.2827  0.01801      0.04191 
-##   27  0.6721    0.2878  0.01604      0.03770 
-##   28  0.6707    0.2851  0.01514      0.03903 
-##   29  0.6727    0.2897  0.01580      0.03915 
-##   30  0.6704    0.2850  0.01824      0.04544 
-## 
-## Accuracy was used to select the optimal model using 
-##  the largest value.
-## The final value used for the model was k = 7.
-\end{verbatim}
 \end{kframe}
 \end{knitrout}
 \end{itemize}
-
-\noindent The KNN algorithm described in the notes can also be used for regression problems. In this case the predicted response is the mean of the $k$ nearest neighbours.
-\begin{itemize}
-  \item Try fitting the KNN model for the regression problem in practical 1. 
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(}\hlstr{"nclRpredictive"}\hlstd{)}
-\hlkwd{data}\hlstd{(FuelEconomy,} \hlkwc{package} \hlstd{=} \hlstr{"AppliedPredictiveModeling"}\hlstd{)}
-\hlstd{regKNN} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"knn"}\hlstd{)}
-\hlstd{regLM} \hlkwb{=} \hlkwd{train}\hlstd{(FE} \hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= cars2010,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{)}
-\hlstd{regKNN} \hlkwb{=} \hlkwd{validate}\hlstd{(regKNN)}
-\hlstd{regLM} \hlkwb{=} \hlkwd{validate}\hlstd{(regLM)}
-\hlkwd{mark}\hlstd{(regKNN)}
-\hlkwd{mark}\hlstd{(regLM)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-  \item How does this compare to the linear regression models?
-
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# The KNN regression model is not as good as the linear}
-\hlcom{# model at predicting the test set. It overestimates more}
-\hlcom{# at the lower end.}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\end{itemize}
-
-\section*{An example with more than two classes}
-
-The \cc{Glass} data set in the \cc{mlbench} package is a data frame containing examples of the chemical analysis of $7$ different types of glass. The goal is to be able to predict which category glass falls into based on the values of the $9$ predictors.
-\begin{knitrout}\small
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(Glass,} \hlkwc{package} \hlstd{=} \hlstr{"mlbench"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\noindent A logistic regression model is typically not suitable for more than $2$ classes, so try fitting the other models using a training set that consists of 90\% of the available data.\marginnote{The function \cc{createDataPartition} can be used here, see notes for a reminder.}
 
 \end{document}
+

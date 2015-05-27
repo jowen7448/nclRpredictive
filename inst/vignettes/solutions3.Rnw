@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{practical3}
+%\VignetteIndexEntry{solutions3}
 %\VignetteEngine{Sweave}
 
 <<echo=FALSE>>=
