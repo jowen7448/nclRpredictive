@@ -13,7 +13,7 @@
 boundary_plot = function(model, x, y, z, 
                          xlab=all.vars(formula(model))[2], 
                          ylab=all.vars(formula(model))[3], 
-                         levels = 0.5, lwd = 2,
+                         levels = 0.5, lwd = 2, jitter = TRUE,
                          ...) {
   
   ## Set up a grid for prediction
@@ -39,8 +39,12 @@ boundary_plot = function(model, x, y, z,
   # there are few unique combinations of prices, 
   # jitter can help see the points
   # points of prices coloured by purchased brand
-  points(jitter(x),
-         jitter(y),
+  if(jitter){
+      x = jitter(x)
+      y = jitter(y)
+  }
+  points(x,
+         y,
          col = c("red","blue")[z], 
          pch = 19, cex = 0.6)
   
